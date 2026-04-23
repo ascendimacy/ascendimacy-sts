@@ -39,7 +39,7 @@ export async function runScenario(options: RunOptions): Promise<void> {
     const turnStart = Date.now();
 
     // Get motor response
-    const motorResult = await runMotorTurn(sessionId, currentBotMessage, i);
+    const motorResult = await runMotorTurn(sessionId, currentBotMessage, i, personaId);
 
     // Get persona response to bot's message
     const personaResult = await personaNextMessage(personaId, motorResult.botMessage, history);

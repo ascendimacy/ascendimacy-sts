@@ -1,31 +1,68 @@
 #!/usr/bin/env node
 import { runScenario } from "./orchestrator.js";
+import { runScenarioFromFile } from "./scenario-runner.js";
 
 const args = process.argv.slice(2);
-
-function parseArgs(argv: string[]): { persona?: string; turns?: number; dryRun?: boolean } {
-  const result: { persona?: string; turns?: number; dryRun?: boolean } = {};
-  for (let i = 0; i < argv.length; i++) {
-    if (argv[i] === "--persona" && argv[i + 1]) result.persona = argv[++i];
-    else if (argv[i] === "--turns" && argv[i + 1]) result.turns = parseInt(argv[++i]!, 10);
-    else if (argv[i] === "--dry-run") result.dryRun = true;
-  }
-  return result;
-}
-
 const command = args[0];
-if (command !== "run") {
-  console.error("Usage: npx sts run --persona <id> --turns <n> [--dry-run]");
-  process.exit(1);
+
+async function main(): Promise<void> {
+  if (command === "run") {
+    await handleRun(args.slice(1));
+  } else if (command === "run-scenario") {
+    await handleRunScenario(args.slice(1));
+  } else {
+    printUsageAndExit(1);
+  }
 }
 
-const { persona, turns = 10, dryRun = false } = parseArgs(args.slice(1));
-if (!persona) {
-  console.error("Error: --persona is required");
-  process.exit(1);
+function printUsageAndExit(code: number): never {
+  console.error(
+    [
+      "Usage:",
+      "  npx sts run --persona <id> --turns <n> [--dry-run]",
+      "  npx sts run-scenario <path-to-scenario.yaml> [--verbose] [--real-llm] [--reports-dir <dir>]",
+    ].join("\n"),
+  );
+  process.exit(code);
 }
 
-runScenario({ personaId: persona, turns, dryRun }).catch((err) => {
+async function handleRun(argv: string[]): Promise<void> {
+  const opts: { persona?: string; turns?: number; dryRun?: boolean } = {};
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === "--persona" && argv[i + 1]) opts.persona = argv[++i];
+    else if (argv[i] === "--turns" && argv[i + 1]) opts.turns = parseInt(argv[++i]!, 10);
+    else if (argv[i] === "--dry-run") opts.dryRun = true;
+  }
+  if (!opts.persona) {
+    console.error("Error: --persona is required");
+    process.exit(1);
+  }
+  await runScenario({ personaId: opts.persona, turns: opts.turns ?? 10, dryRun: opts.dryRun ?? false });
+}
+
+async function handleRunScenario(argv: string[]): Promise<void> {
+  let scenarioPath: string | undefined;
+  const opts: { verbose?: boolean; reportsDir?: string; forceMockLlm?: boolean } = {};
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === "--verbose") opts.verbose = true;
+    else if (a === "--real-llm") opts.forceMockLlm = false;
+    else if (a === "--reports-dir" && argv[i + 1]) opts.reportsDir = argv[++i];
+    else if (a && !a.startsWith("--")) scenarioPath = a;
+  }
+  if (!scenarioPath) {
+    console.error("Error: scenario path is required");
+    printUsageAndExit(1);
+  }
+  await runScenarioFromFile({
+    scenarioPath: scenarioPath!,
+    verbose: opts.verbose,
+    reportsDir: opts.reportsDir,
+    forceMockLlm: opts.forceMockLlm,
+  });
+}
+
+main().catch((err) => {
   console.error("[STS] Fatal error:", err);
   process.exit(1);
 });

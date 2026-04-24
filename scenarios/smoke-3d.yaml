@@ -1,0 +1,36 @@
+name: smoke-3d
+start_date: "2026-05-01T00:00:00Z"
+end_date: "2026-05-03T23:59:59Z"
+personas: [ryo-ochiai, kei-ochiai]
+parents: [yuji-ochiai, yuko-ochiai]
+mock_llm: true
+state_dir: ".sts/state/smoke-3d"
+events:
+  - day: 1
+    type: parent_onboarding
+    persona: yuji-ochiai
+    turns: 4
+    label: yuji_onboarding_quick
+
+  - day: 1
+    type: solo_session
+    persona: ryo-ochiai
+    turns: 5
+    label: ryo_first_chat
+
+  - day: 2
+    type: solo_session
+    persona: kei-ochiai
+    turns: 5
+    label: kei_first_chat
+
+  - day: 3
+    type: joint_session
+    personas: [ryo-ochiai, kei-ochiai]
+    turns: 6
+    label: dyad_first
+
+  - day: 3
+    type: gardner_advance
+    persona: ryo-ochiai
+    label: ryo_phase_advance

@@ -12,3 +12,14 @@ export interface MotorTurnResult {
   playbookId: string;
   motorTrace?: unknown;
 }
+
+/** Motor clients interface — used by scenario-events. */
+export interface MotorClientTool {
+  callTool: (args: { name: string; arguments: Record<string, unknown> }) => Promise<unknown>;
+}
+
+export interface MotorClients {
+  motorExecucao: MotorClientTool;
+  planejador?: MotorClientTool;
+  motorDrota?: MotorClientTool;
+}

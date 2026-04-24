@@ -34,6 +34,12 @@ export interface EventContext {
   iso_now: string;
   motorPath: string;
   clients?: MotorClients | null;
+  /**
+   * Factory pra reconectar clients lazily — necessário porque runScenario
+   * (sessões solo/joint) fecha motor clients ao fim. Eventos posteriores
+   * (gardner_advance) precisam reconectar.
+   */
+  clientsFactory?: () => Promise<MotorClients>;
   /** Callbacks — sts re-usa runScenario existente injetando estes. */
   runSoloSession?: (personaId: string, turns: number, sessionId: string) => Promise<void>;
   runJointSession?: (
@@ -201,7 +207,23 @@ async function handleGardnerAdvance(
   ctx: EventContext,
 ): Promise<EventOutcome> {
   const start = Date.now();
-  if (!ctx.clients?.motorExecucao) {
+  // Reconecta lazy — clients podem ter sido fechados por runScenario anterior.
+  let clients = ctx.clients;
+  if (!clients?.motorExecucao && ctx.clientsFactory) {
+    try {
+      clients = await ctx.clientsFactory();
+    } catch (err) {
+      return {
+        day: event.day,
+        type: event.type,
+        persona: event.persona,
+        success: false,
+        duration_ms: Date.now() - start,
+        error: `failed to reconnect clients: ${err}`,
+      };
+    }
+  }
+  if (!clients?.motorExecucao) {
     return {
       day: event.day,
       type: event.type,
@@ -214,11 +236,11 @@ async function handleGardnerAdvance(
   const sessionId = `${ctx.scenario_name}-${event.persona}-gardner`;
   try {
     // Garante programa existe; depois avança.
-    await ctx.clients.motorExecucao.callTool({
+    await clients.motorExecucao.callTool({
       name: "gardner_program_start",
       arguments: { sessionId },
     });
-    const result = await ctx.clients.motorExecucao.callTool({
+    const result = await clients.motorExecucao.callTool({
       name: "gardner_program_advance",
       arguments: { sessionId },
     });

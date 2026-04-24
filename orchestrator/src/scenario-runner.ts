@@ -39,6 +39,8 @@ export interface ScenarioRunOptions {
   runJointSession?: EventContext["runJointSession"];
   /** MCP clients pra gardner_advance. */
   clients?: EventContext["clients"];
+  /** Factory pra reconectar clients lazily entre eventos. */
+  clientsFactory?: EventContext["clientsFactory"];
   /** Motor path (exigido pra sistema detectar motor binário). */
   motorPath?: string;
   /** Verbose log. */
@@ -116,6 +118,7 @@ export async function runScenarioFromFile(opts: ScenarioRunOptions): Promise<Sce
       iso_now: isoNow,
       motorPath: opts.motorPath ?? process.env["MOTOR_PATH"] ?? "",
       clients: opts.clients,
+      clientsFactory: opts.clientsFactory,
       runSoloSession: opts.runSoloSession,
       runJointSession: opts.runJointSession,
     };

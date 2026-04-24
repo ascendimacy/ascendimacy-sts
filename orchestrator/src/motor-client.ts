@@ -17,6 +17,11 @@ function buildEnv(): Record<string, string> {
     "PLANEJADOR_MODEL",
     "MOTOR_DROTA_MODEL",
     "USE_MOCK_LLM",
+    // Bloco 7 sts#6 scenario runner — virtual clock + state isolation per scenario
+    "STS_VIRTUAL_NOW",
+    "MOTOR_STATE_DIR",
+    "EBROTA_CARD_SECRET",
+    "NODE_ENV",
   ];
   for (const k of keys) {
     const v = process.env[k];

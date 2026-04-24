@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import { runScenario } from "./orchestrator.js";
 import { runScenarioFromFile } from "./scenario-runner.js";
+import { getMotorClients, closeMotorClients } from "./motor-client.js";
+import type { MotorClients } from "./types.js";
 
 const args = process.argv.slice(2);
 const command = args[0];
@@ -54,12 +56,42 @@ async function handleRunScenario(argv: string[]): Promise<void> {
     console.error("Error: scenario path is required");
     printUsageAndExit(1);
   }
-  await runScenarioFromFile({
-    scenarioPath: scenarioPath!,
-    verbose: opts.verbose,
-    reportsDir: opts.reportsDir,
-    forceMockLlm: opts.forceMockLlm,
-  });
+
+  // Factory de clients — reconecta on-demand. Necessário porque runScenario
+  // (sessões solo/joint) fecha clients ao fim; eventos posteriores precisam
+  // de connect fresco.
+  const clientsFactory = async (): Promise<MotorClients> => {
+    const c = await getMotorClients();
+    return c as unknown as MotorClients;
+  };
+
+  try {
+    await runScenarioFromFile({
+      scenarioPath: scenarioPath!,
+      verbose: opts.verbose,
+      reportsDir: opts.reportsDir,
+      forceMockLlm: opts.forceMockLlm,
+      clientsFactory,
+      runSoloSession: async (personaId, turns, _sessionId) => {
+        await runScenario({ personaId, turns, dryRun: false });
+      },
+      runJointSession: async (personaA, personaB, turns, sessionId) => {
+        // v1 simplificação: roda solo de cada persona sequencialmente.
+        // Joint mode real exige sts cross-persona orchestration (débito Bloco 7).
+        if (opts.verbose) {
+          console.log(`  [joint v1] running solo for ${personaA} then ${personaB} (sessionId=${sessionId})`);
+        }
+        await runScenario({ personaId: personaA, turns: Math.ceil(turns / 2), dryRun: false });
+        await runScenario({ personaId: personaB, turns: Math.floor(turns / 2), dryRun: false });
+      },
+    });
+  } finally {
+    try {
+      await closeMotorClients();
+    } catch {
+      /* ignore close errors */
+    }
+  }
 }
 
 main().catch((err) => {

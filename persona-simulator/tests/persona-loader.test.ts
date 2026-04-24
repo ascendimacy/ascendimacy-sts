@@ -2,9 +2,9 @@ import { describe, it, expect } from "vitest";
 import { loadPersonas, getPersona } from "../src/persona-loader.js";
 
 describe("loadPersonas", () => {
-  it("loads at least 3 personas", () => {
+  it("loads at least 5 personas (3 child + 2 parent após Bloco 4)", () => {
     const personas = loadPersonas();
-    expect(personas.length).toBeGreaterThanOrEqual(3);
+    expect(personas.length).toBeGreaterThanOrEqual(5);
   });
 
   it("each persona has id, name, age, profile", () => {

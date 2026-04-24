@@ -11,6 +11,10 @@ export interface MotorTurnResult {
   budgetRemaining: number;
   playbookId: string;
   motorTrace?: unknown;
+  /** sts#8 auto-hook — card_id quando detect+emit pipeline persistiu. */
+  emittedCardId?: string;
+  /** sts#8 auto-hook — skip_reason (no_signal, scaffold_in_non_test, triage_rejected, etc). */
+  cardEmissionSkipReason?: string;
 }
 
 /** Motor clients interface — used by scenario-events. */

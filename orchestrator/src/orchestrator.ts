@@ -58,6 +58,8 @@ export async function runScenario(options: RunOptions): Promise<void> {
       playbookId: motorResult.playbookId,
       durationMs: turnDuration,
       motorTrace: motorResult.motorTrace,
+      emittedCardId: motorResult.emittedCardId,
+      cardEmissionSkipReason: motorResult.cardEmissionSkipReason,
       personaEntry: {
         personaId,
         mood: personaResult.metadata?.mood,

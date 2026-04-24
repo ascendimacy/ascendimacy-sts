@@ -19,6 +19,10 @@ export interface TurnTrace {
   playbookId: string;
   durationMs: number;
   motorTrace?: unknown;
+  /** sts#8 — card_id se auto-hook detect_achievement+emit_card disparou. */
+  emittedCardId?: string;
+  /** sts#8 — razão pra skip do auto-hook (no_signal, scaffold_in_non_test, triage_rejected, auto_hook_error). */
+  cardEmissionSkipReason?: string;
 }
 
 export interface STSTurnTrace extends TurnTrace {

@@ -108,6 +108,11 @@ interface MotorClients {
 }
 
 let _clients: MotorClients | null = null;
+/**
+ * sts#8 — caches "motor unavailable" failure so we don't retry spawn every
+ * turn. Lifted at process boundaries (test isolation via resetMotorClientsForTest).
+ */
+let _motorUnavailable = false;
 
 export async function getMotorClients(): Promise<MotorClients> {
   if (_clients) return _clients;
@@ -138,25 +143,54 @@ export async function getMotorClients(): Promise<MotorClients> {
   return _clients;
 }
 
+/** sts#8 — non-throwing variant. Returns null if spawn impossible. */
+async function tryGetMotorClients(): Promise<MotorClients | null> {
+  if (_motorUnavailable) return null;
+  try {
+    return await getMotorClients();
+  } catch (err) {
+    _motorUnavailable = true;
+    console.warn(`[sts] motor unavailable, degrading to fixed-string mock: ${String(err).slice(0, 200)}`);
+    return null;
+  }
+}
+
+/** Fallback usado SÓ se motor falhar ao spawn. Mantém compat com testes legados. */
+function fixedMockResult(turnNumber: number): MotorTurnResult {
+  return {
+    botMessage: `[Mock Bot Turn ${turnNumber}] Entendo o que você está dizendo. Vamos explorar isso juntos.`,
+    trustLevel: 0.5 + turnNumber * 0.02,
+    budgetRemaining: 100 - turnNumber * 5,
+    playbookId: "mock-playbook-01",
+    motorTrace: { mock: true, turn: turnNumber, reason: "motor_spawn_failed" },
+  };
+}
+
+/**
+ * sts#8 — runMotorTurn passa a SEMPRE tentar motor MCP real. Mock_llm:true não
+ * mais bypassa o motor; ele segue spawned mas planejador+drota usam
+ * USE_MOCK_LLM internamente (sem chamar APIs Anthropic/Mistral). Isso garante
+ * que o pipeline completo é exercitado: get_state→plan→drota→execute_playbook
+ * + auto-hook detect_achievement→emit_card_for_signal (motor#17).
+ *
+ * Fallback fixed-string só se motor não conseguir spawnar (graceful degrade).
+ *
+ * Débito conhecido: este turn loop duplica motor.orchestrator.runTurn. Refactor
+ * para delegação direta está documentado como follow-up sts v0.5+ (ver
+ * docs/handoffs/INBOX.md débito sts#8 → b).
+ */
 export async function runMotorTurn(
   sessionId: string,
   personaMessage: string,
   turnNumber: number,
   personaId: string = "paula-mendes"
 ): Promise<MotorTurnResult> {
-  if (process.env["USE_MOCK_LLM"] === "true") {
-    return {
-      botMessage: `[Mock Bot Turn ${turnNumber}] Entendo o que você está dizendo. Vamos explorar isso juntos.`,
-      trustLevel: 0.5 + turnNumber * 0.02,
-      budgetRemaining: 100 - turnNumber * 5,
-      playbookId: "mock-playbook-01",
-      motorTrace: { mock: true, turn: turnNumber },
-    };
-  }
+  const clients = await tryGetMotorClients();
+  if (!clients) return fixedMockResult(turnNumber);
 
   const motorPath = getMotorPath();
   const { persona, adquirente, inventory } = loadMotorFixtures(motorPath, personaId);
-  const { planejador, motorDrota, motorExecucao } = await getMotorClients();
+  const { planejador, motorDrota, motorExecucao } = clients;
 
   const stateResult = await motorExecucao.callTool({ name: "get_state", arguments: { sessionId } });
   const state = parseToolText<Record<string, unknown>>(stateResult);
@@ -166,29 +200,38 @@ export async function runMotorTurn(
     arguments: { sessionId, persona, adquirente, inventory, state, incomingMessage: personaMessage },
   });
   const plan = parseToolText<{
-    candidateActions: unknown[];
-    strategicRationale: string;
-    contextHints: Record<string, unknown>;
+    contentPool?: unknown[];
+    strategicRationale?: string;
+    contextHints?: Record<string, unknown>;
+    instruction_addition?: string;
   }>(planResult);
 
   const drotaResult = await motorDrota.callTool({
     name: "evaluate_and_select",
     arguments: {
       sessionId,
-      candidateActions: plan.candidateActions,
+      contentPool: plan.contentPool ?? [],
       state,
       persona,
-      strategicRationale: plan.strategicRationale,
+      strategicRationale: plan.strategicRationale ?? "",
       contextHints: plan.contextHints ?? {},
+      instruction_addition: plan.instruction_addition ?? "",
     },
   });
   let drota = parseToolText<{
-    selectedAction: { playbookId: string };
+    selectedContent?: {
+      item?: {
+        id?: string;
+        type?: string;
+        gardner_channels?: string[];
+        casel_target?: string[];
+        sacrifice_type?: string;
+      };
+      score?: number;
+    };
     linguisticMaterialization: string;
-    actualSacrifice: number;
-    actualConfidenceGain: number;
+    selectionRationale?: string;
   }>(drotaResult);
-  // drota may return linguisticMaterialization wrapping the full JSON again (fence or not); unwrap
   const lm = drota.linguisticMaterialization;
   if (typeof lm === "string") {
     const stripped = stripFence(lm);
@@ -200,24 +243,94 @@ export async function runMotorTurn(
     }
   }
 
+  // playbookId default = inventory[0] (deploy profile pattern do motor.orchestrator).
+  const deployProfileId = (inventory[0] as { id?: string } | undefined)?.id ?? "default";
+  const selectedContentId = drota.selectedContent?.item?.id ?? "";
+
   const execResult = await motorExecucao.callTool({
     name: "execute_playbook",
     arguments: {
       sessionId,
-      playbookId: drota.selectedAction.playbookId,
+      playbookId: deployProfileId,
+      selectedContentId,
       output: drota.linguisticMaterialization,
       metadata: {},
     },
   });
-  const exec = parseToolText<{ newState: { trustLevel: number; budgetRemaining: number } }>(execResult);
+  const exec = parseToolText<{
+    newState?: { trustLevel?: number; budgetRemaining?: number };
+    trustLevel?: number;
+    budgetRemaining?: number;
+  }>(execResult);
+  const trustLevel = exec.newState?.trustLevel ?? exec.trustLevel ?? 0.5;
+  const budgetRemaining = exec.newState?.budgetRemaining ?? exec.budgetRemaining ?? 100;
+
+  // ─── sts#8 auto-hook (espelha motor.orchestrator.runTurn pós-#17) ──
+  // Falha aqui não pode quebrar o turn — mesma garantia que motor#17.
+  let emittedCardId: string | undefined;
+  let cardEmissionSkipReason: string | undefined;
+  try {
+    const selectedItem = drota.selectedContent?.item;
+    const gardnerObserved = selectedItem?.gardner_channels ?? [];
+    const caselTouched = selectedItem?.casel_target ?? [];
+    const detectResult = await motorExecucao.callTool({
+      name: "detect_achievement",
+      arguments: {
+        childId: persona.id,
+        sessionId,
+        currentMatrix: (state as { statusMatrix?: Record<string, string> }).statusMatrix ?? {},
+        previousMatrix: (state as { statusMatrix?: Record<string, string> }).statusMatrix ?? {},
+        gardnerObserved,
+        caselTouched,
+        sacrificeSpent: 0,
+        selectedContent: drota.selectedContent ?? {},
+      },
+    });
+    const signal = parseToolText<unknown>(detectResult);
+    if (signal && typeof signal === "object" && (signal as { kind?: unknown }).kind) {
+      const personaProfile = (persona.profile ?? {}) as Record<string, unknown>;
+      const parentalProfile = personaProfile["parental_profile"];
+      const emitResult = await motorExecucao.callTool({
+        name: "emit_card_for_signal",
+        arguments: {
+          signal,
+          childName: persona.name,
+          parentalProfile: parentalProfile && typeof parentalProfile === "object" ? parentalProfile : undefined,
+        },
+      });
+      const emitOutput = parseToolText<{
+        ok?: boolean;
+        card_id?: string;
+        skipped?: boolean;
+        skip_reason?: string;
+      }>(emitResult);
+      if (emitOutput.ok && emitOutput.card_id) {
+        emittedCardId = emitOutput.card_id;
+      } else if (emitOutput.skipped) {
+        cardEmissionSkipReason = emitOutput.skip_reason ?? "skipped_unknown";
+      }
+    } else {
+      cardEmissionSkipReason = "no_signal";
+    }
+  } catch (err) {
+    cardEmissionSkipReason = `auto_hook_error:${String(err).slice(0, 120)}`;
+  }
 
   return {
     botMessage: drota.linguisticMaterialization,
-    trustLevel: exec.newState?.trustLevel ?? 0.5,
-    budgetRemaining: exec.newState?.budgetRemaining ?? 100,
-    playbookId: drota.selectedAction.playbookId,
-    motorTrace: { plan, drota, exec },
+    trustLevel,
+    budgetRemaining,
+    playbookId: deployProfileId,
+    motorTrace: { plan, drota, exec, mock: process.env["USE_MOCK_LLM"] === "true" },
+    emittedCardId,
+    cardEmissionSkipReason,
   };
+}
+
+/** sts#8 — usado por testes para resetar caches entre cenários. */
+export function resetMotorClientsForTest(): void {
+  _clients = null;
+  _motorUnavailable = false;
 }
 
 export async function closeMotorClients(): Promise<void> {

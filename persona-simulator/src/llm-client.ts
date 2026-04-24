@@ -20,6 +20,18 @@ const MOCK_RESPONSES: Record<string, string[]> = {
     '{"message": "Sim, me ajuda pensar passo a passo. 1, 2, 3. Funciona melhor assim.", "endConversation": false, "metadata": {"mood": "structured"}}',
     '{"message": "Ok. Até mais.", "endConversation": true, "metadata": {"mood": "closing"}}',
   ],
+  "yuji-ochiai": [
+    '{"message": "Obrigado pelo contato. Antes de responder em detalhe, vou conversar com a Yuko. Posso retornar amanhã?", "endConversation": false, "metadata": {"mood": "consultative", "role": "parent_primary"}}',
+    '{"message": "O Ryo tem forte tendência narrativa — conta histórias longas e desenha bem. Musical nunca foi forte. Preocupa-me ele não querer ir à escola nas últimas semanas.", "endConversation": false, "metadata": {"mood": "reflective", "role": "parent_primary"}}',
+    '{"message": "Concordo com desafios até grande, monumental com revisão. Evitamos política e proselitismo religioso. Dyad com Kei tudo bem.", "endConversation": false, "metadata": {"mood": "deciding", "role": "parent_primary"}}',
+    '{"message": "Obrigado. Combinado.", "endConversation": true, "metadata": {"mood": "closing", "role": "parent_primary"}}',
+  ],
+  "yuko-ochiai": [
+    '{"message": "Oi! Obrigada por entrar em contato. Em que posso ajudar?", "endConversation": false, "metadata": {"mood": "warm", "role": "parent_secondary"}}',
+    '{"message": "Ryo tem vocabulário emocional rico e lê as pessoas bem — é onde ele brilha. Fico com pena quando ele se isola, queria que tivesse ao menos 1 amigo por semana.", "endConversation": false, "metadata": {"mood": "open", "role": "parent_secondary"}}',
+    '{"message": "Topamos até monumental com revisão. Não bloqueamos quase nada — só proselitismo religioso. Dyad com Kei ótimo.", "endConversation": false, "metadata": {"mood": "permissive", "role": "parent_secondary"}}',
+    '{"message": "Valeu, qualquer coisa me chama!", "endConversation": true, "metadata": {"mood": "closing", "role": "parent_secondary"}}',
+  ],
 };
 
 function getMockResponse(personaId: string, turnIndex: number): PersonaNextMessageOutput {

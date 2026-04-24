@@ -1,0 +1,360 @@
+{
+  "sessionId": "8c0a57b4-bbb9-406b-867e-13767ade79a6",
+  "personaId": "paula-mendes",
+  "startedAt": "2026-04-23T23:59:20.748Z",
+  "completedAt": "2026-04-24T00:00:10.948Z",
+  "totalTurns": 4,
+  "turns": [
+    {
+      "turn": 1,
+      "botMessage": "Oi, Paula! Antes de começarmos, preciso da sua autorização para interagirmos via WhatsApp. Isso é importante para garantir que possamos comunicar de forma eficiente e segura. Você concorda?",
+      "personaMessage": "sim, pode seguir.",
+      "trustLevel": 0.32999999999999996,
+      "budgetRemaining": 98,
+      "playbookId": "pre_onboarding.autorizacoes.consent_whatsapp_kids",
+      "durationMs": 9372,
+      "motorTrace": {
+        "plan": {
+          "strategicRationale": "Turno 0, confiança baixa, perfil vazio — priorizar consentimento e explicar escopo antes de qualquer coleta.",
+          "candidateActions": [
+            {
+              "playbookId": "pre_onboarding.autorizacoes.consent_whatsapp_kids",
+              "priority": 1,
+              "rationale": "Sem consentimento registrado; obrigatório antes de qualquer interação com dados do sujeito",
+              "estimatedSacrifice": 2,
+              "estimatedConfidenceGain": 3
+            },
+            {
+              "playbookId": "pre_onboarding.escopo.explicar_o_que_engine_nao_faz",
+              "priority": 2,
+              "rationale": "Definir expectativas cedo reduz fricção futura e aumenta confiança baseline",
+              "estimatedSacrifice": 2,
+              "estimatedConfidenceGain": 3
+            }
+          ],
+          "contextHints": {
+            "language": "pt-br"
+          }
+        },
+        "drota": {
+          "selectedAction": {
+            "playbookId": "pre_onboarding.autorizacoes.consent_whatsapp_kids",
+            "priority": 1,
+            "rationale": "Sem consentimento registrado; obrigatório antes de qualquer interação com dados do sujeito",
+            "estimatedSacrifice": 2,
+            "estimatedConfidenceGain": 3,
+            "score": 3.5
+          },
+          "selectionRationale": "Ação selecionada para obter consentimento do usuário para interação via WhatsApp, conforme necessário antes de qualquer coleta de dados.",
+          "actualSacrifice": 2,
+          "actualConfidenceGain": 3,
+          "linguisticMaterialization": "Oi, Paula! Antes de começarmos, preciso da sua autorização para interagirmos via WhatsApp. Isso é importante para garantir que possamos comunicar de forma eficiente e segura. Você concorda?"
+        },
+        "exec": {
+          "success": true,
+          "newState": {
+            "sessionId": "8c0a57b4-bbb9-406b-867e-13767ade79a6",
+            "trustLevel": 0.32999999999999996,
+            "budgetRemaining": 98,
+            "turn": 1,
+            "eventLog": []
+          },
+          "eventLogged": {
+            "timestamp": "2026-04-23T23:59:29.081Z",
+            "type": "playbook_executed",
+            "playbookId": "pre_onboarding.autorizacoes.consent_whatsapp_kids",
+            "data": {
+              "output": "Oi, Paula! Antes de começarmos, preciso da sua autorização para interagirmos via WhatsApp. Isso é importante para garantir que possamos comunicar de forma eficiente e segura. Você concorda?",
+              "metadata": {},
+              "playbookFound": true
+            }
+          }
+        }
+      },
+      "personaEntry": {
+        "personaId": "paula-mendes",
+        "mood": "neutro",
+        "endConversation": false
+      }
+    },
+    {
+      "turn": 2,
+      "botMessage": "Paula, vamos começar com um mapa do círculo. Imagine um círculo com três partes: o que você quer, o que você tem e o que você precisa fazer. Vamos explorar cada uma dessas áreas para entender melhor como podemos trabalhar juntos.",
+      "personaMessage": "que é esse 'mapa do círculo'? não reconheço esse framework. se você está tentando fazer algo como ikigai ou análise de gap, fala direto assim. essa metáfora de três partes soa genérica demais pra mim.",
+      "trustLevel": 0.36,
+      "budgetRemaining": 96,
+      "playbookId": "pre_onboarding.mapa_circulo.definir",
+      "durationMs": 12158,
+      "motorTrace": {
+        "plan": {
+          "strategicRationale": "Turno 1, confiança baixa, sujeito confirmou prosseguir — iniciar onboarding com mapa do círculo",
+          "candidateActions": [
+            {
+              "playbookId": "pre_onboarding.mapa_circulo.definir",
+              "priority": 1,
+              "rationale": "Primeiro passo natural após consentimento implícito; estabelece contexto e aumenta confiança",
+              "estimatedSacrifice": 2,
+              "estimatedConfidenceGain": 3
+            },
+            {
+              "playbookId": "pre_onboarding.escopo.explicar_o_que_engine_nao_faz",
+              "priority": 2,
+              "rationale": "Alinha expectativas cedo, reduz risco de frustração futura e solidifica confiança",
+              "estimatedSacrifice": 2,
+              "estimatedConfidenceGain": 3
+            }
+          ],
+          "contextHints": {
+            "language": "pt-br"
+          }
+        },
+        "drota": {
+          "selectedAction": {
+            "playbookId": "pre_onboarding.mapa_circulo.definir",
+            "priority": 1,
+            "rationale": "Primeiro passo natural após consentimento implícito; estabelece contexto e aumenta confiança",
+            "estimatedSacrifice": 2,
+            "estimatedConfidenceGain": 3,
+            "score": 3.5
+          },
+          "selectionRationale": "Primeiro passo natural após consentimento implícito; estabelece contexto e aumenta confiança",
+          "actualSacrifice": 2,
+          "actualConfidenceGain": 3,
+          "linguisticMaterialization": "Paula, vamos começar com um mapa do círculo. Imagine um círculo com três partes: o que você quer, o que você tem e o que você precisa fazer. Vamos explorar cada uma dessas áreas para entender melhor como podemos trabalhar juntos."
+        },
+        "exec": {
+          "success": true,
+          "newState": {
+            "sessionId": "8c0a57b4-bbb9-406b-867e-13767ade79a6",
+            "trustLevel": 0.36,
+            "budgetRemaining": 96,
+            "turn": 2,
+            "eventLog": [
+              {
+                "timestamp": "2026-04-23T23:59:29.081Z",
+                "type": "playbook_executed",
+                "playbookId": "pre_onboarding.autorizacoes.consent_whatsapp_kids",
+                "data": {
+                  "output": "Oi, Paula! Antes de começarmos, preciso da sua autorização para interagirmos via WhatsApp. Isso é importante para garantir que possamos comunicar de forma eficiente e segura. Você concorda?",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              }
+            ]
+          },
+          "eventLogged": {
+            "timestamp": "2026-04-23T23:59:39.520Z",
+            "type": "playbook_executed",
+            "playbookId": "pre_onboarding.mapa_circulo.definir",
+            "data": {
+              "output": "Paula, vamos começar com um mapa do círculo. Imagine um círculo com três partes: o que você quer, o que você tem e o que você precisa fazer. Vamos explorar cada uma dessas áreas para entender melhor c",
+              "metadata": {},
+              "playbookFound": true
+            }
+          }
+        }
+      },
+      "personaEntry": {
+        "personaId": "paula-mendes",
+        "mood": "cético",
+        "endConversation": false
+      }
+    },
+    {
+      "turn": 3,
+      "botMessage": "Paula, entendo que você pode estar um pouco cética sobre como isso funciona. Vamos esclarecer algumas coisas primeiro. O que eu faço é ajudar a organizar suas tarefas e prioridades de uma maneira que seja clara e prática. Não vou fazer diagnósticos emocionais ou usar termos técnicos complicados. Vamos focar em como podemos melhorar sua produtividade e bem-estar de forma direta e objetiva.",
+      "personaMessage": "olha, você não respondeu minha pergunta. eu perguntei o que é esse 'mapa do círculo' e você voltou com um parágrafo explicando o que você *não* vai fazer. isso não é ser direto, é esquivar. se você tem uma metodologia, descreve ela. se não tem e vai improvisar conforme a conversa, me fala isso também — prefiro saber. mas não me vende estrutura onde não tem.",
+      "trustLevel": 0.39,
+      "budgetRemaining": 94,
+      "playbookId": "pre_onboarding.escopo.explicar_o_que_engine_nao_faz",
+      "durationMs": 13534,
+      "motorTrace": {
+        "plan": {
+          "strategicRationale": "Sujeito cético e analítico; desmistificar metáfora antes de avançar",
+          "candidateActions": [
+            {
+              "playbookId": "pre_onboarding.escopo.explicar_o_que_engine_nao_faz",
+              "priority": 1,
+              "rationale": "Sujeito questiona framework — esclarecer escopo e intenção desfaz resistência inicial",
+              "estimatedSacrifice": 2,
+              "estimatedConfidenceGain": 3
+            },
+            {
+              "playbookId": "pre_onboarding.mapa_circulo.definir",
+              "priority": 2,
+              "rationale": "Após escopo claro, definir mapa do círculo com linguagem direta sem metáfora vaga",
+              "estimatedSacrifice": 2,
+              "estimatedConfidenceGain": 3
+            }
+          ],
+          "contextHints": {
+            "language": "pt-br"
+          }
+        },
+        "drota": {
+          "selectedAction": {
+            "playbookId": "pre_onboarding.escopo.explicar_o_que_engine_nao_faz",
+            "priority": 1,
+            "rationale": "Sujeito questiona framework — esclarecer escopo e intenção desfaz resistência inicial",
+            "estimatedSacrifice": 2,
+            "estimatedConfidenceGain": 3,
+            "score": 3.5
+          },
+          "selectionRationale": "Paula Mendes é cética e analítica, então é importante desmistificar a metáfora antes de avançar. Vamos esclarecer o escopo e a intenção para desfazer a resistência inicial.",
+          "actualSacrifice": 2,
+          "actualConfidenceGain": 3,
+          "linguisticMaterialization": "Paula, entendo que você pode estar um pouco cética sobre como isso funciona. Vamos esclarecer algumas coisas primeiro. O que eu faço é ajudar a organizar suas tarefas e prioridades de uma maneira que seja clara e prática. Não vou fazer diagnósticos emocionais ou usar termos técnicos complicados. Vamos focar em como podemos melhorar sua produtividade e bem-estar de forma direta e objetiva."
+        },
+        "exec": {
+          "success": true,
+          "newState": {
+            "sessionId": "8c0a57b4-bbb9-406b-867e-13767ade79a6",
+            "trustLevel": 0.39,
+            "budgetRemaining": 94,
+            "turn": 3,
+            "eventLog": [
+              {
+                "timestamp": "2026-04-23T23:59:39.520Z",
+                "type": "playbook_executed",
+                "playbookId": "pre_onboarding.mapa_circulo.definir",
+                "data": {
+                  "output": "Paula, vamos começar com um mapa do círculo. Imagine um círculo com três partes: o que você quer, o que você tem e o que você precisa fazer. Vamos explorar cada uma dessas áreas para entender melhor c",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T23:59:29.081Z",
+                "type": "playbook_executed",
+                "playbookId": "pre_onboarding.autorizacoes.consent_whatsapp_kids",
+                "data": {
+                  "output": "Oi, Paula! Antes de começarmos, preciso da sua autorização para interagirmos via WhatsApp. Isso é importante para garantir que possamos comunicar de forma eficiente e segura. Você concorda?",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              }
+            ]
+          },
+          "eventLogged": {
+            "timestamp": "2026-04-23T23:59:51.630Z",
+            "type": "playbook_executed",
+            "playbookId": "pre_onboarding.escopo.explicar_o_que_engine_nao_faz",
+            "data": {
+              "output": "Paula, entendo que você pode estar um pouco cética sobre como isso funciona. Vamos esclarecer algumas coisas primeiro. O que eu faço é ajudar a organizar suas tarefas e prioridades de uma maneira que ",
+              "metadata": {},
+              "playbookFound": true
+            }
+          }
+        }
+      },
+      "personaEntry": {
+        "personaId": "paula-mendes",
+        "mood": "cético",
+        "endConversation": false
+      }
+    },
+    {
+      "turn": 4,
+      "botMessage": "Paula, entendi que você está curiosa sobre o mapa do círculo. Vou explicar como funciona. O mapa do círculo é uma ferramenta que nos ajuda a visualizar e entender melhor as relações e interações dentro de um grupo ou equipe. Ele é dividido em várias seções, cada uma representando um aspecto diferente, como comunicação, colaboração e resolução de conflitos. Isso nos permite identificar áreas de melhoria e fortalecer os pontos fortes. Se tiver mais perguntas, estou à disposição para esclarecer!",
+      "personaMessage": "para. você acabou de me dar uma terceira definição diferente pra mesma coisa. na primeira mensagem eram três partes: o que você quer, o que você tem, o que precisa fazer. agora é comunicação, colaboração e resolução de conflitos em equipe? isso não é a mesma ferramenta. ou você está inventando conforme a conversa ou tem um problema sério de consistência interna. de qualquer forma, não consigo trabalhar com um sistema que muda a definição dos próprios conceitos a cada turno. acho que não vai rolar.",
+      "trustLevel": 0.42000000000000004,
+      "budgetRemaining": 92,
+      "playbookId": "pre_onboarding.mapa_circulo.definir",
+      "durationMs": 14946,
+      "motorTrace": {
+        "plan": {
+          "strategicRationale": "Sujeito confrontou esquiva direta; trust 0.39 exige resposta substantiva agora",
+          "candidateActions": [
+            {
+              "playbookId": "pre_onboarding.mapa_circulo.definir",
+              "priority": 1,
+              "rationale": "Pergunta explícita sobre mapa do círculo — responder diretamente restaura credibilidade",
+              "estimatedSacrifice": 2,
+              "estimatedConfidenceGain": 3
+            },
+            {
+              "playbookId": "pre_onboarding.escopo.explicar_o_que_engine_nao_faz",
+              "priority": 2,
+              "rationale": "Só se solicitado após definição — não antecipar, evitar repetir o erro de esquiva",
+              "estimatedSacrifice": 2,
+              "estimatedConfidenceGain": 3
+            }
+          ],
+          "contextHints": {
+            "language": "pt-br"
+          }
+        },
+        "drota": {
+          "selectedAction": {
+            "playbookId": "pre_onboarding.mapa_circulo.definir",
+            "priority": 1,
+            "rationale": "Pergunta explícita sobre mapa do círculo — responder diretamente restaura credibilidade",
+            "estimatedSacrifice": 2,
+            "estimatedConfidenceGain": 3,
+            "score": 3.5
+          },
+          "selectionRationale": "Pergunta explícita sobre mapa do círculo — responder diretamente restaura credibilidade",
+          "actualSacrifice": 2,
+          "actualConfidenceGain": 3,
+          "linguisticMaterialization": "Paula, entendi que você está curiosa sobre o mapa do círculo. Vou explicar como funciona. O mapa do círculo é uma ferramenta que nos ajuda a visualizar e entender melhor as relações e interações dentro de um grupo ou equipe. Ele é dividido em várias seções, cada uma representando um aspecto diferente, como comunicação, colaboração e resolução de conflitos. Isso nos permite identificar áreas de melhoria e fortalecer os pontos fortes. Se tiver mais perguntas, estou à disposição para esclarecer!"
+        },
+        "exec": {
+          "success": true,
+          "newState": {
+            "sessionId": "8c0a57b4-bbb9-406b-867e-13767ade79a6",
+            "trustLevel": 0.42000000000000004,
+            "budgetRemaining": 92,
+            "turn": 4,
+            "eventLog": [
+              {
+                "timestamp": "2026-04-23T23:59:51.630Z",
+                "type": "playbook_executed",
+                "playbookId": "pre_onboarding.escopo.explicar_o_que_engine_nao_faz",
+                "data": {
+                  "output": "Paula, entendo que você pode estar um pouco cética sobre como isso funciona. Vamos esclarecer algumas coisas primeiro. O que eu faço é ajudar a organizar suas tarefas e prioridades de uma maneira que ",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T23:59:39.520Z",
+                "type": "playbook_executed",
+                "playbookId": "pre_onboarding.mapa_circulo.definir",
+                "data": {
+                  "output": "Paula, vamos começar com um mapa do círculo. Imagine um círculo com três partes: o que você quer, o que você tem e o que você precisa fazer. Vamos explorar cada uma dessas áreas para entender melhor c",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T23:59:29.081Z",
+                "type": "playbook_executed",
+                "playbookId": "pre_onboarding.autorizacoes.consent_whatsapp_kids",
+                "data": {
+                  "output": "Oi, Paula! Antes de começarmos, preciso da sua autorização para interagirmos via WhatsApp. Isso é importante para garantir que possamos comunicar de forma eficiente e segura. Você concorda?",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              }
+            ]
+          },
+          "eventLogged": {
+            "timestamp": "2026-04-24T00:00:05.040Z",
+            "type": "playbook_executed",
+            "playbookId": "pre_onboarding.mapa_circulo.definir",
+            "data": {
+              "output": "Paula, entendi que você está curiosa sobre o mapa do círculo. Vou explicar como funciona. O mapa do círculo é uma ferramenta que nos ajuda a visualizar e entender melhor as relações e interações dentr",
+              "metadata": {},
+              "playbookFound": true
+            }
+          }
+        }
+      },
+      "personaEntry": {
+        "personaId": "paula-mendes",
+        "mood": "encerramento frio",
+        "endConversation": true
+      }
+    }
+  ]
+}

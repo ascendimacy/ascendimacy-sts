@@ -160,11 +160,22 @@ export async function runMotorTurn(
     name: "plan_turn",
     arguments: { sessionId, persona, adquirente, inventory, state, incomingMessage: personaMessage },
   });
-  const plan = parseToolText<{ candidateActions: unknown[]; strategicRationale: string }>(planResult);
+  const plan = parseToolText<{
+    candidateActions: unknown[];
+    strategicRationale: string;
+    contextHints: Record<string, unknown>;
+  }>(planResult);
 
   const drotaResult = await motorDrota.callTool({
     name: "evaluate_and_select",
-    arguments: { sessionId, candidateActions: plan.candidateActions, state, persona },
+    arguments: {
+      sessionId,
+      candidateActions: plan.candidateActions,
+      state,
+      persona,
+      strategicRationale: plan.strategicRationale,
+      contextHints: plan.contextHints ?? {},
+    },
   });
   let drota = parseToolText<{
     selectedAction: { playbookId: string };

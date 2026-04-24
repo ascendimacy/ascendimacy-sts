@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "feat/**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build all packages
+        run: npm run build
+
+      - name: Run tests
+        run: npm test
+
+      - name: Run smoke test
+        env:
+          USE_MOCK_LLM: "true"
+          MOTOR_PATH: "/tmp/motor-stub"
+        run: |
+          mkdir -p /tmp/motor-stub/planejador/dist
+          mkdir -p /tmp/motor-stub/motor-drota/dist
+          mkdir -p /tmp/motor-stub/motor-execucao/dist
+          touch /tmp/motor-stub/planejador/dist/server.js
+          touch /tmp/motor-stub/motor-drota/dist/server.js
+          touch /tmp/motor-stub/motor-execucao/dist/server.js
+          npm run smoke

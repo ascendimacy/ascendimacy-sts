@@ -1,0 +1,16 @@
+{
+  "name": "ascendimacy-sts",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": ["shared", "persona-simulator", "orchestrator"],
+  "scripts": {
+    "build": "npm run build -ws --if-present",
+    "test": "npm run test -ws --if-present",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "engines": { "node": ">=22.0.0" },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0"
+  }
+}

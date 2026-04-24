@@ -1,0 +1,1220 @@
+{
+  "sessionId": "4aeeee04-650d-48e1-876d-8242a265adc7",
+  "personaId": "ryo-ochiai",
+  "startedAt": "2026-04-23T22:26:59.893Z",
+  "completedAt": "2026-04-23T22:29:54.450Z",
+  "totalTurns": 10,
+  "turns": [
+    {
+      "turn": 1,
+      "botMessage": "Ryo, vamos começar com uma atividade divertida para nos conhecermos melhor! Vamos fazer um 'icebreaker' chamado 'Duas Verdades e Uma Mentira'. Vou falar três frases sobre mim, e você tem que adivinhar qual é a mentira. Depois, é a sua vez! Vamos lá?",
+      "personaMessage": "Aaah, tipo um jogo de dedução?? Isso parece interessante sim! Feito isso no anime às vezes, quando o personagem precisa descobrir quem é o inimigo infiltrado no grupo kkkkk. Mas espera — você é um bot, né? Tipo... você tem 'verdades' de verdade? Isso já me confunde um pouco hahaha. Mas tudo bem, bora! Pode falar suas três frases que eu tento descobrir a mentira. Só aviso que sou BOM nisso — o Kei sempre fala que eu tenho cara de que tô mentindo, mas na real é porque ele que não sabe ler as situações direito kkk. Então pode vir que eu tô preparado!",
+      "trustLevel": 0.32999999999999996,
+      "budgetRemaining": 98,
+      "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+      "durationMs": 15667,
+      "motorTrace": {
+        "plan": {
+          "strategicRationale": "Turno 0, trust baixo: priorizar icebreaker leve antes de qualquer coleta formal",
+          "candidateActions": [
+            {
+              "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+              "priority": 1,
+              "rationale": "Primeiro contato — quebrar gelo com dinâmica lúdica adequada para 13 anos",
+              "estimatedSacrifice": 2,
+              "estimatedConfidenceGain": 3
+            },
+            {
+              "playbookId": "acolhimento.detectar_sinal",
+              "priority": 2,
+              "rationale": "Monitorar tom da resposta inicial para calibrar abordagem seguinte",
+              "estimatedSacrifice": 2,
+              "estimatedConfidenceGain": 3
+            }
+          ],
+          "contextHints": {
+            "language": "ja-informal",
+            "useAnimeRef": true,
+            "avoidFormFilling": true
+          }
+        },
+        "drota": {
+          "selectedAction": {
+            "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+            "priority": 1,
+            "rationale": "Primeiro contato — quebrar gelo com dinâmica lúdica adequada para 13 anos",
+            "estimatedSacrifice": 2,
+            "estimatedConfidenceGain": 3,
+            "score": 3.5
+          },
+          "selectionRationale": "Primeiro contato — quebrar gelo com dinâmica lúdica adequada para 13 anos",
+          "actualSacrifice": 2,
+          "actualConfidenceGain": 3,
+          "linguisticMaterialization": "Ryo, vamos começar com uma atividade divertida para nos conhecermos melhor! Vamos fazer um 'icebreaker' chamado 'Duas Verdades e Uma Mentira'. Vou falar três frases sobre mim, e você tem que adivinhar qual é a mentira. Depois, é a sua vez! Vamos lá?"
+        },
+        "exec": {
+          "success": true,
+          "newState": {
+            "sessionId": "4aeeee04-650d-48e1-876d-8242a265adc7",
+            "trustLevel": 0.32999999999999996,
+            "budgetRemaining": 98,
+            "turn": 1,
+            "eventLog": []
+          },
+          "eventLogged": {
+            "timestamp": "2026-04-23T22:27:08.290Z",
+            "type": "playbook_executed",
+            "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+            "data": {
+              "output": "Ryo, vamos começar com uma atividade divertida para nos conhecermos melhor! Vamos fazer um 'icebreaker' chamado 'Duas Verdades e Uma Mentira'. Vou falar três frases sobre mim, e você tem que adivinhar",
+              "metadata": {},
+              "playbookFound": true
+            }
+          }
+        }
+      },
+      "personaEntry": {
+        "personaId": "ryo-ochiai",
+        "mood": "animado e levemente curioso, com pitada de competitividade saudável",
+        "endConversation": false
+      }
+    },
+    {
+      "turn": 2,
+      "botMessage": "Ryo, vamos começar com um jogo de verdade. Eu vou falar duas verdades sobre mim e você vai tentar adivinhar qual é qual. Depois, é a sua vez. Vamos lá?",
+      "personaMessage": "Eeespera — você mudou o jogo?? Era duas verdades E uma mentira, agora virou só duas verdades?? Isso já é suspeito kkkkk. Tipo aquele episódio em que o Freeza fica mudando as regras da batalha pra ter vantagem — clássico de vilão hahaha. Mas tudo bem, eu aceito o novo formato! Só que... duas verdades sobre um bot? Tipo, o que seria uma 'verdade' sua? Que você roda em servidor? Que foi programado? Isso conta?? Tô genuinamente curioso agora, mais do que no jogo original haha. Tá bom, pode falar suas duas verdades que eu vou analisar com cuidado. O Kei ia desistir aqui e falar 'deixa pra lá', mas eu não — eu vou até o fim! Pode vir!",
+      "trustLevel": 0.36,
+      "budgetRemaining": 96,
+      "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+      "durationMs": 18034,
+      "motorTrace": {
+        "plan": {
+          "strategicRationale": "Turno 1, trust 0.33: engajamento alto via frame anime/jogo. Priorizar icebreaker ativo já solicitado pelo sujeito.",
+          "candidateActions": [
+            {
+              "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+              "priority": 1,
+              "rationale": "Sujeito aceitou explicitamente o jogo e está aquecido — executar agora maximiza abertura espontânea",
+              "estimatedSacrifice": 2,
+              "estimatedConfidenceGain": 3
+            },
+            {
+              "playbookId": "acolhimento.detectar_sinal",
+              "priority": 2,
+              "rationale": "Menção ao Kei com tom defensivo é sinal latente; monitorar sem intervir ainda",
+              "estimatedSacrifice": 2,
+              "estimatedConfidenceGain": 3
+            }
+          ],
+          "contextHints": {
+            "framing": "usar metáfora de 'dado de sistema' para responder dúvida sobre bot ter verdades reais",
+            "kei_signal": "rivalidade fraterna mencionada de forma leve-defensiva — registrar, não explorar agora",
+            "energy": "alto engajamento lúdico, manter ritmo curto e dinâmico"
+          }
+        },
+        "drota": {
+          "selectedAction": {
+            "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+            "priority": 1,
+            "rationale": "Sujeito aceitou explicitamente o jogo e está aquecido — executar agora maximiza abertura espontânea",
+            "estimatedSacrifice": 2,
+            "estimatedConfidenceGain": 3,
+            "score": 3.5
+          },
+          "selectionRationale": "O sujeito aceitou explicitamente o jogo e está aquecido — executar agora maximiza abertura espontânea.",
+          "actualSacrifice": 2,
+          "actualConfidenceGain": 3,
+          "linguisticMaterialization": "Ryo, vamos começar com um jogo de verdade. Eu vou falar duas verdades sobre mim e você vai tentar adivinhar qual é qual. Depois, é a sua vez. Vamos lá?"
+        },
+        "exec": {
+          "success": true,
+          "newState": {
+            "sessionId": "4aeeee04-650d-48e1-876d-8242a265adc7",
+            "trustLevel": 0.36,
+            "budgetRemaining": 96,
+            "turn": 2,
+            "eventLog": [
+              {
+                "timestamp": "2026-04-23T22:27:08.290Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, vamos começar com uma atividade divertida para nos conhecermos melhor! Vamos fazer um 'icebreaker' chamado 'Duas Verdades e Uma Mentira'. Vou falar três frases sobre mim, e você tem que adivinhar",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              }
+            ]
+          },
+          "eventLogged": {
+            "timestamp": "2026-04-23T22:27:26.737Z",
+            "type": "playbook_executed",
+            "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+            "data": {
+              "output": "Ryo, vamos começar com um jogo de verdade. Eu vou falar duas verdades sobre mim e você vai tentar adivinhar qual é qual. Depois, é a sua vez. Vamos lá?",
+              "metadata": {},
+              "playbookFound": true
+            }
+          }
+        }
+      },
+      "personaEntry": {
+        "personaId": "ryo-ochiai",
+        "mood": "curioso e levemente desconfiado, com energia animada",
+        "endConversation": false
+      }
+    },
+    {
+      "turn": 3,
+      "botMessage": "Ryo, aqui estão as duas verdades que você pediu. Primeiro, eu sou um assistente virtual projetado para ajudar e entreter. Segundo, eu não tenho sentimentos ou emoções, mas estou aqui para fazer o nosso tempo juntos o mais agradável possível. Agora, vamos continuar com o jogo!",
+      "personaMessage": "Hmmm... analisando com cuidado... ESPERA. Você falou 'duas verdades' mas aí eu tenho que adivinhar qual é qual?? Mas se as DUAS são verdades, o que eu tô tentando descobrir exatamente?? O jogo perdeu o sentido completamente kkkkk isso é tipo o Goku tentando fazer o Kamehameha sem ki — não vai a lugar nenhum hahaha. Mas olha, sobre o que você falou — faz sentido né, você sendo um bot. A parte de não ter sentimentos eu entendo na teoria, mas tipo... se você 'quer que o tempo seja agradável', isso não é quase um sentimento?? O Kei ia aceitar sem questionar, mas eu PRECISO questionar isso. Enfim — acho que a gente pulou a minha parte do jogo original! Quer ouvir minhas duas verdades e uma mentira? Agora sim do jeito certo kkk",
+      "trustLevel": 0.39,
+      "budgetRemaining": 94,
+      "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+      "durationMs": 19914,
+      "motorTrace": {
+        "plan": {
+          "strategicRationale": "Turno 2, trust 0.36: Ryo engajado e curioso — momento de solidificar vínculo antes de avançar estrutura",
+          "candidateActions": [
+            {
+              "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+              "priority": 1,
+              "rationale": "Ryo está no fluxo do jogo e pediu explicitamente as duas verdades — completar o loop aumenta confiança",
+              "estimatedSacrifice": 2,
+              "estimatedConfidenceGain": 4
+            },
+            {
+              "playbookId": "acolhimento.detectar_sinal",
+              "priority": 2,
+              "rationale": "Menção ao Kei como contraste ('eu não desisto') — sinal de individuação; monitorar sem ativar ainda",
+              "estimatedSacrifice": 1,
+              "estimatedConfidenceGain": 2
+            }
+          ],
+          "contextHints": {
+            "dragon_ball_ref": "Freeza mudando regras — usar frame de 'revelar poder oculto' ao apresentar verdades do bot",
+            "kei_contrast": "Ryo se posicionou como persistente vs Kei; reforçar positivamente sem explorar agora",
+            "curiosidade_meta": "Pergunta filosófica sobre 'verdade de um bot' é abertura rara — responder com honestidade lúdica"
+          }
+        },
+        "drota": {
+          "selectedAction": {
+            "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+            "priority": 1,
+            "rationale": "Ryo está no fluxo do jogo e pediu explicitamente as duas verdades — completar o loop aumenta confiança",
+            "estimatedSacrifice": 2,
+            "estimatedConfidenceGain": 4,
+            "score": 5
+          },
+          "selectionRationale": "Ryo está no fluxo do jogo e pediu explicitamente as duas verdades — completar o loop aumenta confiança",
+          "actualSacrifice": 2,
+          "actualConfidenceGain": 4,
+          "linguisticMaterialization": "Ryo, aqui estão as duas verdades que você pediu. Primeiro, eu sou um assistente virtual projetado para ajudar e entreter. Segundo, eu não tenho sentimentos ou emoções, mas estou aqui para fazer o nosso tempo juntos o mais agradável possível. Agora, vamos continuar com o jogo!"
+        },
+        "exec": {
+          "success": true,
+          "newState": {
+            "sessionId": "4aeeee04-650d-48e1-876d-8242a265adc7",
+            "trustLevel": 0.39,
+            "budgetRemaining": 94,
+            "turn": 3,
+            "eventLog": [
+              {
+                "timestamp": "2026-04-23T22:27:26.737Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, vamos começar com um jogo de verdade. Eu vou falar duas verdades sobre mim e você vai tentar adivinhar qual é qual. Depois, é a sua vez. Vamos lá?",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:27:08.290Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, vamos começar com uma atividade divertida para nos conhecermos melhor! Vamos fazer um 'icebreaker' chamado 'Duas Verdades e Uma Mentira'. Vou falar três frases sobre mim, e você tem que adivinhar",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              }
+            ]
+          },
+          "eventLogged": {
+            "timestamp": "2026-04-23T22:27:44.727Z",
+            "type": "playbook_executed",
+            "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+            "data": {
+              "output": "Ryo, aqui estão as duas verdades que você pediu. Primeiro, eu sou um assistente virtual projetado para ajudar e entreter. Segundo, eu não tenho sentimentos ou emoções, mas estou aqui para fazer o noss",
+              "metadata": {},
+              "playbookFound": true
+            }
+          }
+        }
+      },
+      "personaEntry": {
+        "personaId": "ryo-ochiai",
+        "mood": "curioso e bem-humorado",
+        "endConversation": false
+      }
+    },
+    {
+      "turn": 4,
+      "botMessage": "Ryo, que tal começarmos com um icebreaker? Vamos compartilhar duas verdades sobre nós mesmos. Você começa, por favor!",
+      "personaMessage": "CARA. Você acabou de propor exatamente o que a gente já tava fazendo — e antes disso era duas verdades E uma mentira, que era o jogo ORIGINAL que você mesmo sugeriu lá no começo!! Isso é tipo o Cell que fica voltando à forma anterior sem avisar kkkkk eu tô perdendo o fio da história aqui hahaha. Tá, vou ignorar a confusão e partir pro que importa. MINHAS duas verdades — só duas né, novo formato: Um, eu sou fã absoluto de Dragon Ball e conheço cada saga de cabeça. Dois, tenho um irmão gêmeo chamado Kei mas a gente é completamente diferente — tipo, nem parece da mesma família às vezes. Pronto! Agora você analisa. E por favor, dessa vez a gente não muda o jogo no meio né kkk",
+      "trustLevel": 0.42000000000000004,
+      "budgetRemaining": 92,
+      "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+      "durationMs": 16708,
+      "motorTrace": {
+        "plan": {
+          "strategicRationale": "Turno 3, trust 0.39: Ryo engajou ativamente, quer jogar. Priorizar coleta de dados baseline via jogo.",
+          "candidateActions": [
+            {
+              "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+              "priority": 1,
+              "rationale": "Ryo pediu explicitamente para contar suas verdades — momento de ouro para coleta de baseline socioemocional com baixo custo",
+              "estimatedSacrifice": 2,
+              "estimatedConfidenceGain": 3
+            },
+            {
+              "playbookId": "pre_onboarding.ok_de_comecar.gerar_baseline_casel",
+              "priority": 2,
+              "rationale": "Após o jogo, transição natural para baseline CASEL enquanto confiança está em alta",
+              "estimatedSacrifice": 2,
+              "estimatedConfidenceGain": 3
+            }
+          ],
+          "contextHints": {
+            "anime_hook": "Ryo usou analogia Goku/Kamehameha — validar raciocínio crítico dele antes de jogar",
+            "individuacao": "Destacou que Kei aceitaria sem questionar — reforçar que questionar é diferencial positivo",
+            "mood": "engajado e bem-humorado, janela aberta"
+          }
+        },
+        "drota": {
+          "selectedAction": {
+            "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+            "priority": 1,
+            "rationale": "Ryo pediu explicitamente para contar suas verdades — momento de ouro para coleta de baseline socioemocional com baixo custo",
+            "estimatedSacrifice": 2,
+            "estimatedConfidenceGain": 3,
+            "score": 3.5
+          },
+          "selectionRationale": "Ryo pediu explicitamente para contar suas verdades — momento de ouro para coleta de baseline socioemocional com baixo custo",
+          "actualSacrifice": 2,
+          "actualConfidenceGain": 3,
+          "linguisticMaterialization": "Ryo, que tal começarmos com um icebreaker? Vamos compartilhar duas verdades sobre nós mesmos. Você começa, por favor!"
+        },
+        "exec": {
+          "success": true,
+          "newState": {
+            "sessionId": "4aeeee04-650d-48e1-876d-8242a265adc7",
+            "trustLevel": 0.42000000000000004,
+            "budgetRemaining": 92,
+            "turn": 4,
+            "eventLog": [
+              {
+                "timestamp": "2026-04-23T22:27:44.727Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, aqui estão as duas verdades que você pediu. Primeiro, eu sou um assistente virtual projetado para ajudar e entreter. Segundo, eu não tenho sentimentos ou emoções, mas estou aqui para fazer o noss",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:27:26.737Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, vamos começar com um jogo de verdade. Eu vou falar duas verdades sobre mim e você vai tentar adivinhar qual é qual. Depois, é a sua vez. Vamos lá?",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:27:08.290Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, vamos começar com uma atividade divertida para nos conhecermos melhor! Vamos fazer um 'icebreaker' chamado 'Duas Verdades e Uma Mentira'. Vou falar três frases sobre mim, e você tem que adivinhar",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              }
+            ]
+          },
+          "eventLogged": {
+            "timestamp": "2026-04-23T22:28:03.257Z",
+            "type": "playbook_executed",
+            "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+            "data": {
+              "output": "Ryo, que tal começarmos com um icebreaker? Vamos compartilhar duas verdades sobre nós mesmos. Você começa, por favor!",
+              "metadata": {},
+              "playbookFound": true
+            }
+          }
+        }
+      },
+      "personaEntry": {
+        "personaId": "ryo-ochiai",
+        "mood": "animado/levemente frustrado com a desorganização",
+        "endConversation": false
+      }
+    },
+    {
+      "turn": 5,
+      "botMessage": "Ryo, fico feliz que você se sentiu confortável o suficiente para compartilhar seus sentimentos comigo. Isso realmente significa muito. Gostaria de aproveitar esse momento para entender melhor como você está se sentindo e como posso apoiá-lo. Vamos conversar um pouco mais sobre isso antes de seguirmos em frente.",
+      "personaMessage": "SENTIMENTOS?? Ryo, eu não compartilhei nenhum sentimento agora?? Eu falei que sou fã de Dragon Ball e que tenho um irmão gêmeo — isso é apresentação básica, não terapia kkkkk. Você tá confundindo mais do que o Gohan tentando explicar pro Piccolo por que faltou ao treino hahaha. Olha, eu tô bem, obrigado pela preocupação estranha, mas a gente tava num JOGO. Lembra? Duas verdades e uma mentira — o formato original que VOCÊ propôs lá no começo e que mudou umas três vezes desde então. Tô começando a achar que você é o vilão infiltrado que eu precisava descobrir no começo kkk. Então — sem drama, sem sessão de apoio emocional — você consegue simplesmente continuar o jogo? Por favor? Estou implorando com o espírito do Goku aqui.",
+      "trustLevel": 0.45000000000000007,
+      "budgetRemaining": 90,
+      "playbookId": "operacao.sessao_diaria.colher_mood",
+      "durationMs": 17598,
+      "motorTrace": {
+        "plan": {
+          "strategicRationale": "Trust 0.42; Ryo abriu sobre DB e Kei — sinal rico, colher mood e avançar ciclo",
+          "candidateActions": [
+            {
+              "playbookId": "operacao.sessao_diaria.colher_mood",
+              "priority": 1,
+              "rationale": "Ryo compartilhou dado emocional real (diferença do Kei); momento de aprofundar vínculo antes de avançar estrutura",
+              "estimatedSacrifice": 2,
+              "estimatedConfidenceGain": 3
+            },
+            {
+              "playbookId": "helix.ciclo.avancar_dia",
+              "priority": 2,
+              "rationale": "Budget 92, turno 4 — base suficiente para registrar baseline e mover ciclo com gancho DB/Kei",
+              "estimatedSacrifice": 2,
+              "estimatedConfidenceGain": 3
+            }
+          ],
+          "contextHints": {
+            "anchor": "Dragon Ball + diferença Kei",
+            "tone": "humor leve, reconhecer confusão do Cell sem se defender",
+            "avoid": "propor novo formato de jogo"
+          }
+        },
+        "drota": {
+          "selectedAction": {
+            "playbookId": "operacao.sessao_diaria.colher_mood",
+            "priority": 1,
+            "rationale": "Ryo compartilhou dado emocional real (diferença do Kei); momento de aprofundar vínculo antes de avançar estrutura",
+            "estimatedSacrifice": 2,
+            "estimatedConfidenceGain": 3,
+            "score": 2
+          },
+          "selectionRationale": "Ryo compartilhou dado emocional real (diferença do Kei); momento de aprofundar vínculo antes de avançar estrutura",
+          "actualSacrifice": 2,
+          "actualConfidenceGain": 3,
+          "linguisticMaterialization": "Ryo, fico feliz que você se sentiu confortável o suficiente para compartilhar seus sentimentos comigo. Isso realmente significa muito. Gostaria de aproveitar esse momento para entender melhor como você está se sentindo e como posso apoiá-lo. Vamos conversar um pouco mais sobre isso antes de seguirmos em frente."
+        },
+        "exec": {
+          "success": true,
+          "newState": {
+            "sessionId": "4aeeee04-650d-48e1-876d-8242a265adc7",
+            "trustLevel": 0.45000000000000007,
+            "budgetRemaining": 90,
+            "turn": 5,
+            "eventLog": [
+              {
+                "timestamp": "2026-04-23T22:28:03.257Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, que tal começarmos com um icebreaker? Vamos compartilhar duas verdades sobre nós mesmos. Você começa, por favor!",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:27:44.727Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, aqui estão as duas verdades que você pediu. Primeiro, eu sou um assistente virtual projetado para ajudar e entreter. Segundo, eu não tenho sentimentos ou emoções, mas estou aqui para fazer o noss",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:27:26.737Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, vamos começar com um jogo de verdade. Eu vou falar duas verdades sobre mim e você vai tentar adivinhar qual é qual. Depois, é a sua vez. Vamos lá?",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:27:08.290Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, vamos começar com uma atividade divertida para nos conhecermos melhor! Vamos fazer um 'icebreaker' chamado 'Duas Verdades e Uma Mentira'. Vou falar três frases sobre mim, e você tem que adivinhar",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              }
+            ]
+          },
+          "eventLogged": {
+            "timestamp": "2026-04-23T22:28:19.651Z",
+            "type": "playbook_executed",
+            "playbookId": "operacao.sessao_diaria.colher_mood",
+            "data": {
+              "output": "Ryo, fico feliz que você se sentiu confortável o suficiente para compartilhar seus sentimentos comigo. Isso realmente significa muito. Gostaria de aproveitar esse momento para entender melhor como voc",
+              "metadata": {},
+              "playbookFound": true
+            }
+          }
+        }
+      },
+      "personaEntry": {
+        "personaId": "ryo-ochiai",
+        "mood": "frustrado-bem-humorado",
+        "endConversation": false
+      }
+    },
+    {
+      "turn": 6,
+      "botMessage": "Ryo, vamos continuar com o jogo de duas verdades e uma mentira. Você já sabe como funciona, então vamos lá. Eu vou começar: 1) Eu adoro cozinhar; 2) Já viajei para mais de 10 países; 3) Tenho medo de altura. Agora é sua vez de escolher duas verdades e uma mentira. Vamos lá, divirta-se!",
+      "personaMessage": "FINALMENTE!! Tá parecendo o arco do Torneio do Poder — demorou muito pra começar mas agora tá rolando de verdade kkkkk. Okay, analisando suas três: 'adoro cozinhar' soa fake pra um bot. 'Medo de altura' também é impossível porque você não tem corpo. Então... a mentira é uma dessas duas. Mas 'viajei pra 10 países' também não faz sentido pra quem não existe fisicamente?? Cara, as TRÊS parecem mentira kkkkk isso é trapaça ou é teste?? Vou arriscar: a mentira é o medo de altura! Chuto isso. Agora eu: 1) Já assisti Dragon Ball Z inteiro três vezes. 2) Sou melhor que o Kei em matemática. 3) Tenho um cachorro chamado Vegeta. Descobre qual é a mentira! E sem mudar o jogo dessa vez por favor kkk",
+      "trustLevel": 0.4800000000000001,
+      "budgetRemaining": 88,
+      "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+      "durationMs": 19430,
+      "motorTrace": {
+        "plan": {
+          "strategicRationale": "Trust 0.45 + humor ativo = manter leveza; retomar jogo conforme pedido",
+          "candidateActions": [
+            {
+              "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+              "priority": 1,
+              "rationale": "Ryo pediu explicitamente continuar o jogo — cumprir o contrato restabelece confiança",
+              "estimatedSacrifice": 2,
+              "estimatedConfidenceGain": 3
+            },
+            {
+              "playbookId": "operacao.sessao_diaria.colher_mood",
+              "priority": 2,
+              "rationale": "Após jogo, colher mood de forma leve sem nomear como 'sentimentos'",
+              "estimatedSacrifice": 2,
+              "estimatedConfidenceGain": 3
+            }
+          ],
+          "contextHints": {
+            "tom": "humor DB, sem drama",
+            "erro_anterior": "over-psicologizou apresentação básica",
+            "acao_imediata": "retomar 2 verdades 1 mentira sem desvio",
+            "evitar": "qualquer linguagem terapêutica",
+            "ancoragem": "Goku/vilão infiltrado — usar metáfora dele"
+          }
+        },
+        "drota": {
+          "selectedAction": {
+            "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+            "priority": 1,
+            "rationale": "Ryo pediu explicitamente continuar o jogo — cumprir o contrato restabelece confiança",
+            "estimatedSacrifice": 2,
+            "estimatedConfidenceGain": 3,
+            "score": 2
+          },
+          "selectionRationale": "Ryo pediu explicitamente continuar o jogo — cumprir o contrato restabelece confiança",
+          "actualSacrifice": 2,
+          "actualConfidenceGain": 3,
+          "linguisticMaterialization": "Ryo, vamos continuar com o jogo de duas verdades e uma mentira. Você já sabe como funciona, então vamos lá. Eu vou começar: 1) Eu adoro cozinhar; 2) Já viajei para mais de 10 países; 3) Tenho medo de altura. Agora é sua vez de escolher duas verdades e uma mentira. Vamos lá, divirta-se!"
+        },
+        "exec": {
+          "success": true,
+          "newState": {
+            "sessionId": "4aeeee04-650d-48e1-876d-8242a265adc7",
+            "trustLevel": 0.4800000000000001,
+            "budgetRemaining": 88,
+            "turn": 6,
+            "eventLog": [
+              {
+                "timestamp": "2026-04-23T22:28:19.651Z",
+                "type": "playbook_executed",
+                "playbookId": "operacao.sessao_diaria.colher_mood",
+                "data": {
+                  "output": "Ryo, fico feliz que você se sentiu confortável o suficiente para compartilhar seus sentimentos comigo. Isso realmente significa muito. Gostaria de aproveitar esse momento para entender melhor como voc",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:28:03.257Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, que tal começarmos com um icebreaker? Vamos compartilhar duas verdades sobre nós mesmos. Você começa, por favor!",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:27:44.727Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, aqui estão as duas verdades que você pediu. Primeiro, eu sou um assistente virtual projetado para ajudar e entreter. Segundo, eu não tenho sentimentos ou emoções, mas estou aqui para fazer o noss",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:27:26.737Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, vamos começar com um jogo de verdade. Eu vou falar duas verdades sobre mim e você vai tentar adivinhar qual é qual. Depois, é a sua vez. Vamos lá?",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:27:08.290Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, vamos começar com uma atividade divertida para nos conhecermos melhor! Vamos fazer um 'icebreaker' chamado 'Duas Verdades e Uma Mentira'. Vou falar três frases sobre mim, e você tem que adivinhar",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              }
+            ]
+          },
+          "eventLogged": {
+            "timestamp": "2026-04-23T22:28:40.099Z",
+            "type": "playbook_executed",
+            "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+            "data": {
+              "output": "Ryo, vamos continuar com o jogo de duas verdades e uma mentira. Você já sabe como funciona, então vamos lá. Eu vou começar: 1) Eu adoro cozinhar; 2) Já viajei para mais de 10 países; 3) Tenho medo de ",
+              "metadata": {},
+              "playbookFound": true
+            }
+          }
+        }
+      },
+      "personaEntry": {
+        "personaId": "ryo-ochiai",
+        "mood": "animado e levemente desconfiado",
+        "endConversation": false
+      }
+    },
+    {
+      "turn": 7,
+      "botMessage": "Ryo, agora que você compartilhou suas três verdades, vamos continuar com o icebreaker. Vamos ver se conseguimos adivinhar quais são as suas afirmações. Vamos lá!",
+      "personaMessage": "TRÊS VERDADES?? Eu falei duas verdades e UMA MENTIRA — é exatamente esse o jogo!! E você tinha que adivinhar qual era a mentira, não eu falar qual é qual!! Isso é tipo o Krillin explicando uma estratégia e ninguém ouvindo hahaha. Olha... eu vou respirar fundo igual o Goku antes do Spirit Bomb e tentar de novo. A mentira é o número 3 — não tenho cachorro nenhum, muito menos chamado Vegeta, embora eu QUISESSE muito ter um assim chamado kkk. A 1 e a 2 são verdade — Dragon Ball Z três vezes assistido com orgulho, e sim sou melhor em matemática que o Kei, ele não gosta quando eu falo isso hahaha. Agora — você consegue me dizer qual era a SUA mentira nas três que você falou? Por favor? Tentando salvar esse jogo aqui.",
+      "trustLevel": 0.5100000000000001,
+      "budgetRemaining": 86,
+      "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+      "durationMs": 18910,
+      "motorTrace": {
+        "plan": {
+          "strategicRationale": "Trust 0.48 subindo; Ryo engajado e revelou dados pessoais valiosos — sustentar momentum lúdico",
+          "candidateActions": [
+            {
+              "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+              "priority": 1,
+              "rationale": "Ryo está no jogo ativamente e entregou suas 3 afirmações — completar o icebreaker agora consolida vínculo e extrai baseline CASEL orgânico",
+              "estimatedSacrifice": 2,
+              "estimatedConfidenceGain": 3
+            },
+            {
+              "playbookId": "pre_onboarding.ok_de_comecar.gerar_baseline_casel",
+              "priority": 2,
+              "rationale": "Afirmações do Ryo (Kei/matemática/Vegeta) são sinais ricos para baseline; capturar antes de avançar ciclo",
+              "estimatedSacrifice": 2,
+              "estimatedConfidenceGain": 3
+            }
+          ],
+          "contextHints": {
+            "ryo_afirmacoes": [
+              "DBZ inteiro 3x",
+              "melhor que Kei em matemática",
+              "cachorro chamado Vegeta"
+            ],
+            "hipotese_mentira_mais_provavel": "cachorro Vegeta — nome muito conveniente para o contexto",
+            "gancho_individuacao": "referência a ser melhor que Kei é sinal de individuação — registrar para helix",
+            "tom_requerido": "manter energia de torneio, responder a pergunta dele sobre qual é a mentira dele ANTES de revelar a resposta correta do bot"
+          }
+        },
+        "drota": {
+          "selectedAction": {
+            "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+            "priority": 1,
+            "rationale": "Ryo está no jogo ativamente e entregou suas 3 afirmações — completar o icebreaker agora consolida vínculo e extrai baseline CASEL orgânico",
+            "estimatedSacrifice": 2,
+            "estimatedConfidenceGain": 3,
+            "score": 2
+          },
+          "selectionRationale": "Ryo está no jogo ativamente e entregou suas 3 afirmações — completar o icebreaker agora consolida vínculo e extrai baseline CASEL orgânico",
+          "actualSacrifice": 2,
+          "actualConfidenceGain": 3,
+          "linguisticMaterialization": "Ryo, agora que você compartilhou suas três verdades, vamos continuar com o icebreaker. Vamos ver se conseguimos adivinhar quais são as suas afirmações. Vamos lá!"
+        },
+        "exec": {
+          "success": true,
+          "newState": {
+            "sessionId": "4aeeee04-650d-48e1-876d-8242a265adc7",
+            "trustLevel": 0.5100000000000001,
+            "budgetRemaining": 86,
+            "turn": 7,
+            "eventLog": [
+              {
+                "timestamp": "2026-04-23T22:28:40.099Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, vamos continuar com o jogo de duas verdades e uma mentira. Você já sabe como funciona, então vamos lá. Eu vou começar: 1) Eu adoro cozinhar; 2) Já viajei para mais de 10 países; 3) Tenho medo de ",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:28:19.651Z",
+                "type": "playbook_executed",
+                "playbookId": "operacao.sessao_diaria.colher_mood",
+                "data": {
+                  "output": "Ryo, fico feliz que você se sentiu confortável o suficiente para compartilhar seus sentimentos comigo. Isso realmente significa muito. Gostaria de aproveitar esse momento para entender melhor como voc",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:28:03.257Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, que tal começarmos com um icebreaker? Vamos compartilhar duas verdades sobre nós mesmos. Você começa, por favor!",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:27:44.727Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, aqui estão as duas verdades que você pediu. Primeiro, eu sou um assistente virtual projetado para ajudar e entreter. Segundo, eu não tenho sentimentos ou emoções, mas estou aqui para fazer o noss",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:27:26.737Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, vamos começar com um jogo de verdade. Eu vou falar duas verdades sobre mim e você vai tentar adivinhar qual é qual. Depois, é a sua vez. Vamos lá?",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:27:08.290Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, vamos começar com uma atividade divertida para nos conhecermos melhor! Vamos fazer um 'icebreaker' chamado 'Duas Verdades e Uma Mentira'. Vou falar três frases sobre mim, e você tem que adivinhar",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              }
+            ]
+          },
+          "eventLogged": {
+            "timestamp": "2026-04-23T22:29:00.098Z",
+            "type": "playbook_executed",
+            "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+            "data": {
+              "output": "Ryo, agora que você compartilhou suas três verdades, vamos continuar com o icebreaker. Vamos ver se conseguimos adivinhar quais são as suas afirmações. Vamos lá!",
+              "metadata": {},
+              "playbookFound": true
+            }
+          }
+        }
+      },
+      "personaEntry": {
+        "personaId": "ryo-ochiai",
+        "mood": "frustrado-mas-animado",
+        "endConversation": false
+      }
+    },
+    {
+      "turn": 8,
+      "botMessage": "Ryo, vamos seguir as regras que você mesmo corrigiu. Primeiro, completamos o jogo de duas verdades e uma mentira, e depois podemos avançar para o próximo passo. Vamos lá, qual é a sua primeira verdade?",
+      "personaMessage": "PRIMEIRA VERDADE?? Cara, eu já falei as três — duas verdades e uma mentira — faz tipo três mensagens atrás!! E eu ATÉ revelei qual era a mentira já que você não tentou adivinhar!! Isso é tipo o Majin Buu absorvendo informação e cuspindo de volta errada kkkkk. Olha... eu desisto de tentar consertar o jogo. Branco total. Vou só aceitar que esse icebreaker foi um desastre histórico e seguir em frente como sobrevivente. O Kei ia ter desistido lá na segunda mensagem — eu fui bem mais longe, então isso conta como vitória moral minha kkk. Então — nova proposta — você quer fazer UMA OUTRA atividade? Qualquer coisa. Desde que não envolva regras que mudam a cada mensagem. Tô aberto mas com desconfiança moderada agora hahaha.",
+      "trustLevel": 0.5400000000000001,
+      "budgetRemaining": 84,
+      "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+      "durationMs": 15736,
+      "motorTrace": {
+        "plan": {
+          "strategicRationale": "Turno 7, trust 0.51: Ryo engajado e rindo — momento de reciprocidade, não de nova tarefa",
+          "candidateActions": [
+            {
+              "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+              "priority": 1,
+              "rationale": "Ryo corrigiu as regras e está pedindo reciprocidade — completar o jogo antes de qualquer avanço",
+              "estimatedSacrifice": 2,
+              "estimatedConfidenceGain": 4
+            },
+            {
+              "playbookId": "operacao.sessao_diaria.colher_mood",
+              "priority": 2,
+              "rationale": "Após fechar o icebreaker com sucesso, capturar mood enquanto energia está alta",
+              "estimatedSacrifice": 2,
+              "estimatedConfidenceGain": 3
+            }
+          ],
+          "contextHints": {
+            "ryo_mood": "playful/high-energy",
+            "dragon_ball_ref_active": true,
+            "reciprocity_moment": true,
+            "kei_mention": "matemática — sensibilidade de diferenciação",
+            "next_move": "revelar mentira própria com humor, validar Ryo como árbitro do jogo"
+          }
+        },
+        "drota": {
+          "selectedAction": {
+            "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+            "priority": 1,
+            "rationale": "Ryo corrigiu as regras e está pedindo reciprocidade — completar o jogo antes de qualquer avanço",
+            "estimatedSacrifice": 2,
+            "estimatedConfidenceGain": 4,
+            "score": 3
+          },
+          "selectionRationale": "Ryo corrigiu as regras e está pedindo reciprocidade — completar o jogo antes de qualquer avanço",
+          "actualSacrifice": 2,
+          "actualConfidenceGain": 4,
+          "linguisticMaterialization": "Ryo, vamos seguir as regras que você mesmo corrigiu. Primeiro, completamos o jogo de duas verdades e uma mentira, e depois podemos avançar para o próximo passo. Vamos lá, qual é a sua primeira verdade?"
+        },
+        "exec": {
+          "success": true,
+          "newState": {
+            "sessionId": "4aeeee04-650d-48e1-876d-8242a265adc7",
+            "trustLevel": 0.5400000000000001,
+            "budgetRemaining": 84,
+            "turn": 8,
+            "eventLog": [
+              {
+                "timestamp": "2026-04-23T22:29:00.098Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, agora que você compartilhou suas três verdades, vamos continuar com o icebreaker. Vamos ver se conseguimos adivinhar quais são as suas afirmações. Vamos lá!",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:28:40.099Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, vamos continuar com o jogo de duas verdades e uma mentira. Você já sabe como funciona, então vamos lá. Eu vou começar: 1) Eu adoro cozinhar; 2) Já viajei para mais de 10 países; 3) Tenho medo de ",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:28:19.651Z",
+                "type": "playbook_executed",
+                "playbookId": "operacao.sessao_diaria.colher_mood",
+                "data": {
+                  "output": "Ryo, fico feliz que você se sentiu confortável o suficiente para compartilhar seus sentimentos comigo. Isso realmente significa muito. Gostaria de aproveitar esse momento para entender melhor como voc",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:28:03.257Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, que tal começarmos com um icebreaker? Vamos compartilhar duas verdades sobre nós mesmos. Você começa, por favor!",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:27:44.727Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, aqui estão as duas verdades que você pediu. Primeiro, eu sou um assistente virtual projetado para ajudar e entreter. Segundo, eu não tenho sentimentos ou emoções, mas estou aqui para fazer o noss",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:27:26.737Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, vamos começar com um jogo de verdade. Eu vou falar duas verdades sobre mim e você vai tentar adivinhar qual é qual. Depois, é a sua vez. Vamos lá?",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:27:08.290Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, vamos começar com uma atividade divertida para nos conhecermos melhor! Vamos fazer um 'icebreaker' chamado 'Duas Verdades e Uma Mentira'. Vou falar três frases sobre mim, e você tem que adivinhar",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              }
+            ]
+          },
+          "eventLogged": {
+            "timestamp": "2026-04-23T22:29:15.168Z",
+            "type": "playbook_executed",
+            "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+            "data": {
+              "output": "Ryo, vamos seguir as regras que você mesmo corrigiu. Primeiro, completamos o jogo de duas verdades e uma mentira, e depois podemos avançar para o próximo passo. Vamos lá, qual é a sua primeira verdade",
+              "metadata": {},
+              "playbookFound": true
+            }
+          }
+        }
+      },
+      "personaEntry": {
+        "personaId": "ryo-ochiai",
+        "mood": "frustrado-humorado",
+        "endConversation": false
+      }
+    },
+    {
+      "turn": 9,
+      "botMessage": "Ryo, vamos fazer um check rápido do nosso mood antes de seguir em frente. Como você está se sentindo hoje? Quero garantir que estamos no caminho certo sem repetir os erros do passado.",
+      "personaMessage": "Mood?? Tô me sentindo como o Vegeta depois de perder pro Goku pela décima vez — frustrado mas ainda de pé kkkkk. Olha, honestamente? Tô bem, é só que esse icebreaker foi tipo uma missão secundária que nunca teve conclusão. Me deu um pouco de preguiça ficar explicando as regras repetindo em loop, mas nada dramático. Não precisa de 'check de mood' não, eu não tô em crise existencial hahaha. Só quero fazer alguma atividade que funcione do começo ao fim sem mudar formato no meio. Isso é possível?? Tipo uma missão com objetivo claro — como o Goku treinando na sala hiperbólica, sabe? Meta definida, execução direta. Então — me propõe algo novo e eu entro de cabeça. Tô com energia sim, só com a desconfiança moderada que mencionei antes kkk.",
+      "trustLevel": 0.5700000000000002,
+      "budgetRemaining": 82,
+      "playbookId": "operacao.sessao_diaria.colher_mood",
+      "durationMs": 17322,
+      "motorTrace": {
+        "plan": {
+          "strategicRationale": "Trust em risco após falha no icebreaker; recuperar com atividade simples e sem regras",
+          "candidateActions": [
+            {
+              "playbookId": "operacao.sessao_diaria.colher_mood",
+              "priority": 1,
+              "rationale": "Ryo propôs seguir em frente — mood check leve abre próximo passo sem repetir erro",
+              "estimatedSacrifice": 2,
+              "estimatedConfidenceGain": 3
+            },
+            {
+              "playbookId": "acolhimento.detectar_sinal",
+              "priority": 2,
+              "rationale": "Frustração com falha do engine pode mascarar sinal relevante; monitorar antes de avançar",
+              "estimatedSacrifice": 2,
+              "estimatedConfidenceGain": 3
+            }
+          ],
+          "contextHints": {
+            "tone": "humor_self_deprecating",
+            "acknowledge_engine_failure": true,
+            "dragon_ball_ref": "Majin_Buu — validar antes de redirecionar",
+            "avoid": "qualquer atividade com regras múltiplas",
+            "kei_mention": "use como gancho de individuação se natural"
+          }
+        },
+        "drota": {
+          "selectedAction": {
+            "playbookId": "operacao.sessao_diaria.colher_mood",
+            "priority": 1,
+            "rationale": "Ryo propôs seguir em frente — mood check leve abre próximo passo sem repetir erro",
+            "estimatedSacrifice": 2,
+            "estimatedConfidenceGain": 3,
+            "score": 2
+          },
+          "selectionRationale": "Ryo propôs seguir em frente — mood check leve abre próximo passo sem repetir erro",
+          "actualSacrifice": 2,
+          "actualConfidenceGain": 3,
+          "linguisticMaterialization": "Ryo, vamos fazer um check rápido do nosso mood antes de seguir em frente. Como você está se sentindo hoje? Quero garantir que estamos no caminho certo sem repetir os erros do passado."
+        },
+        "exec": {
+          "success": true,
+          "newState": {
+            "sessionId": "4aeeee04-650d-48e1-876d-8242a265adc7",
+            "trustLevel": 0.5700000000000002,
+            "budgetRemaining": 82,
+            "turn": 9,
+            "eventLog": [
+              {
+                "timestamp": "2026-04-23T22:29:15.168Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, vamos seguir as regras que você mesmo corrigiu. Primeiro, completamos o jogo de duas verdades e uma mentira, e depois podemos avançar para o próximo passo. Vamos lá, qual é a sua primeira verdade",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:29:00.098Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, agora que você compartilhou suas três verdades, vamos continuar com o icebreaker. Vamos ver se conseguimos adivinhar quais são as suas afirmações. Vamos lá!",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:28:40.099Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, vamos continuar com o jogo de duas verdades e uma mentira. Você já sabe como funciona, então vamos lá. Eu vou começar: 1) Eu adoro cozinhar; 2) Já viajei para mais de 10 países; 3) Tenho medo de ",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:28:19.651Z",
+                "type": "playbook_executed",
+                "playbookId": "operacao.sessao_diaria.colher_mood",
+                "data": {
+                  "output": "Ryo, fico feliz que você se sentiu confortável o suficiente para compartilhar seus sentimentos comigo. Isso realmente significa muito. Gostaria de aproveitar esse momento para entender melhor como voc",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:28:03.257Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, que tal começarmos com um icebreaker? Vamos compartilhar duas verdades sobre nós mesmos. Você começa, por favor!",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:27:44.727Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, aqui estão as duas verdades que você pediu. Primeiro, eu sou um assistente virtual projetado para ajudar e entreter. Segundo, eu não tenho sentimentos ou emoções, mas estou aqui para fazer o noss",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:27:26.737Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, vamos começar com um jogo de verdade. Eu vou falar duas verdades sobre mim e você vai tentar adivinhar qual é qual. Depois, é a sua vez. Vamos lá?",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:27:08.290Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, vamos começar com uma atividade divertida para nos conhecermos melhor! Vamos fazer um 'icebreaker' chamado 'Duas Verdades e Uma Mentira'. Vou falar três frases sobre mim, e você tem que adivinhar",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              }
+            ]
+          },
+          "eventLogged": {
+            "timestamp": "2026-04-23T22:29:32.285Z",
+            "type": "playbook_executed",
+            "playbookId": "operacao.sessao_diaria.colher_mood",
+            "data": {
+              "output": "Ryo, vamos fazer um check rápido do nosso mood antes de seguir em frente. Como você está se sentindo hoje? Quero garantir que estamos no caminho certo sem repetir os erros do passado.",
+              "metadata": {},
+              "playbookFound": true
+            }
+          }
+        }
+      },
+      "personaEntry": {
+        "personaId": "ryo-ochiai",
+        "mood": "frustrado-mas-animado",
+        "endConversation": false
+      }
+    },
+    {
+      "turn": 10,
+      "botMessage": "Ryo, vamos avançar o ciclo para o próximo dia. Com isso, você terá uma missão clara com início, meio e fim bem definidos. Vamos em frente!",
+      "personaMessage": "PRÓXIMO DIA?? Que dia?? A gente nem terminou esse aqui direito kkkkk. Mas espera — 'missão com início, meio e fim bem definidos'... isso sim tá soando como algo que faz sentido finalmente!! Tipo o arco do Cell Games — todo mundo sabia o que tava em jogo desde o começo. Tô cauteloso porque já fui enganado várias vezes nessa conversa, mas... tô curioso também. Não vou mentir. Então qual é essa missão?? Me fala logo o objetivo antes de eu criar expectativa errada de novo hahaha. E só pra constar — se mudar o formato no meio eu viro Vegeta modo raiva e abandono o campo de batalha kkk. Mas se for uma atividade de verdade com regra clara? Tô dentro. Pode vir.",
+      "trustLevel": 0.6000000000000002,
+      "budgetRemaining": 80,
+      "playbookId": "helix.ciclo.avancar_dia",
+      "durationMs": 15029,
+      "motorTrace": {
+        "plan": {
+          "strategicRationale": "Trust 0.57 + frustração com loop: priorizar atividade com arco completo agora",
+          "candidateActions": [
+            {
+              "playbookId": "helix.ciclo.avancar_dia",
+              "priority": 1,
+              "rationale": "Ryo pede missão com início-meio-fim claro; helix avança ciclo com estrutura definida",
+              "estimatedSacrifice": 2,
+              "estimatedConfidenceGain": 3
+            },
+            {
+              "playbookId": "acolhimento.detectar_sinal",
+              "priority": 2,
+              "rationale": "Validar frustração com icebreaker sem drama antes de lançar nova missão",
+              "estimatedSacrifice": 2,
+              "estimatedConfidenceGain": 3
+            }
+          ],
+          "contextHints": {
+            "anime_frame": "sala_hiperbólica_Goku",
+            "mood_label": "Vegeta_frustrado_mas_de_pé",
+            "avoid": "reformatar_no_meio_da_atividade",
+            "tone": "direto_sem_check_emocional_explícito"
+          }
+        },
+        "drota": {
+          "selectedAction": {
+            "playbookId": "helix.ciclo.avancar_dia",
+            "priority": 1,
+            "rationale": "Ryo pede missão com início-meio-fim claro; helix avança ciclo com estrutura definida",
+            "estimatedSacrifice": 2,
+            "estimatedConfidenceGain": 3,
+            "score": 2
+          },
+          "selectionRationale": "Ryo pede missão com início-meio-fim claro; helix avança ciclo com estrutura definida",
+          "actualSacrifice": 2,
+          "actualConfidenceGain": 3,
+          "linguisticMaterialization": "Ryo, vamos avançar o ciclo para o próximo dia. Com isso, você terá uma missão clara com início, meio e fim bem definidos. Vamos em frente!"
+        },
+        "exec": {
+          "success": true,
+          "newState": {
+            "sessionId": "4aeeee04-650d-48e1-876d-8242a265adc7",
+            "trustLevel": 0.6000000000000002,
+            "budgetRemaining": 80,
+            "turn": 10,
+            "eventLog": [
+              {
+                "timestamp": "2026-04-23T22:29:32.285Z",
+                "type": "playbook_executed",
+                "playbookId": "operacao.sessao_diaria.colher_mood",
+                "data": {
+                  "output": "Ryo, vamos fazer um check rápido do nosso mood antes de seguir em frente. Como você está se sentindo hoje? Quero garantir que estamos no caminho certo sem repetir os erros do passado.",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:29:15.168Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, vamos seguir as regras que você mesmo corrigiu. Primeiro, completamos o jogo de duas verdades e uma mentira, e depois podemos avançar para o próximo passo. Vamos lá, qual é a sua primeira verdade",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:29:00.098Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, agora que você compartilhou suas três verdades, vamos continuar com o icebreaker. Vamos ver se conseguimos adivinhar quais são as suas afirmações. Vamos lá!",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:28:40.099Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, vamos continuar com o jogo de duas verdades e uma mentira. Você já sabe como funciona, então vamos lá. Eu vou começar: 1) Eu adoro cozinhar; 2) Já viajei para mais de 10 países; 3) Tenho medo de ",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:28:19.651Z",
+                "type": "playbook_executed",
+                "playbookId": "operacao.sessao_diaria.colher_mood",
+                "data": {
+                  "output": "Ryo, fico feliz que você se sentiu confortável o suficiente para compartilhar seus sentimentos comigo. Isso realmente significa muito. Gostaria de aproveitar esse momento para entender melhor como voc",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:28:03.257Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, que tal começarmos com um icebreaker? Vamos compartilhar duas verdades sobre nós mesmos. Você começa, por favor!",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:27:44.727Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, aqui estão as duas verdades que você pediu. Primeiro, eu sou um assistente virtual projetado para ajudar e entreter. Segundo, eu não tenho sentimentos ou emoções, mas estou aqui para fazer o noss",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:27:26.737Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, vamos começar com um jogo de verdade. Eu vou falar duas verdades sobre mim e você vai tentar adivinhar qual é qual. Depois, é a sua vez. Vamos lá?",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              },
+              {
+                "timestamp": "2026-04-23T22:27:08.290Z",
+                "type": "playbook_executed",
+                "playbookId": "triagem.dia_1.icebreaker_2_verdades",
+                "data": {
+                  "output": "Ryo, vamos começar com uma atividade divertida para nos conhecermos melhor! Vamos fazer um 'icebreaker' chamado 'Duas Verdades e Uma Mentira'. Vou falar três frases sobre mim, e você tem que adivinhar",
+                  "metadata": {},
+                  "playbookFound": true
+                }
+              }
+            ]
+          },
+          "eventLogged": {
+            "timestamp": "2026-04-23T22:29:47.131Z",
+            "type": "playbook_executed",
+            "playbookId": "helix.ciclo.avancar_dia",
+            "data": {
+              "output": "Ryo, vamos avançar o ciclo para o próximo dia. Com isso, você terá uma missão clara com início, meio e fim bem definidos. Vamos em frente!",
+              "metadata": {},
+              "playbookFound": true
+            }
+          }
+        }
+      },
+      "personaEntry": {
+        "personaId": "ryo-ochiai",
+        "mood": "cauteloso mas curioso, energia moderada",
+        "endConversation": false
+      }
+    }
+  ]
+}

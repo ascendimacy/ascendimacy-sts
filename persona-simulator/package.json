@@ -1,0 +1,23 @@
+{
+  "name": "@ascendimacy/persona-simulator",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/server.js",
+  "bin": { "persona-simulator": "./dist/server.js" },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.40.0",
+    "@modelcontextprotocol/sdk": "^1.10.0",
+    "js-yaml": "^4.1.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.0.0",
+    "typescript": "*",
+    "vitest": "*"
+  }
+}

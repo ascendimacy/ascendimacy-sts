@@ -12,7 +12,9 @@
   "dependencies": {
     "@ascendimacy/sts-shared": "*",
     "@modelcontextprotocol/sdk": "^1.10.0",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/js-yaml": "^4.0.9",
+    "better-sqlite3": "^12.9.0",
     "js-yaml": "^4.1.1",
     "zod": "^3.23.0"
   },

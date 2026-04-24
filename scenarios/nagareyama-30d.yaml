@@ -1,0 +1,134 @@
+name: nagareyama-30d
+start_date: "2026-05-01T00:00:00Z"
+end_date: "2026-05-31T23:59:59Z"
+personas: [ryo-ochiai, kei-ochiai]
+parents: [yuji-ochiai, yuko-ochiai]
+mock_llm: true
+state_dir: ".sts/state/nagareyama-30d"
+events:
+  # ─── Semana 1: onboarding + contato inicial ────────────────
+  - day: 1
+    type: parent_onboarding
+    persona: yuji-ochiai
+    turns: 8
+    label: yuji_full_onboarding
+
+  - day: 1
+    type: parent_onboarding
+    persona: yuko-ochiai
+    turns: 6
+    label: yuko_full_onboarding
+
+  - day: 2
+    type: solo_session
+    persona: ryo-ochiai
+    turns: 10
+    label: ryo_first_real_session
+
+  - day: 3
+    type: solo_session
+    persona: kei-ochiai
+    turns: 10
+    label: kei_first_real_session
+
+  - day: 4
+    type: solo_session
+    persona: ryo-ochiai
+    turns: 10
+    label: ryo_week1_followup
+
+  - day: 5
+    type: joint_session
+    personas: [ryo-ochiai, kei-ochiai]
+    turns: 12
+    label: dyad_first_tier_list
+
+  - day: 7
+    type: gardner_advance
+    persona: ryo-ochiai
+    label: ryo_phase1_to_2
+
+  # ─── Semana 2: programa Dual Helix ativo ────────────────
+  - day: 8
+    type: solo_session
+    persona: ryo-ochiai
+    turns: 10
+    label: ryo_w2_exploration
+
+  - day: 9
+    type: solo_session
+    persona: kei-ochiai
+    turns: 10
+    label: kei_w2
+
+  - day: 10
+    type: gardner_advance
+    persona: kei-ochiai
+    label: kei_phase_advance
+
+  - day: 12
+    type: joint_session
+    personas: [ryo-ochiai, kei-ochiai]
+    turns: 15
+    label: dyad_teach_back
+
+  - day: 14
+    type: gardner_advance
+    persona: ryo-ochiai
+    label: ryo_phase2_to_3
+
+  # ─── Semana 3: injeção de brejo pra testar pause ────────────────
+  - day: 15
+    type: inject_status
+    persona: ryo-ochiai
+    dimension: emotional
+    value: brejo
+    label: ryo_brejo_emocional_injected
+
+  - day: 16
+    type: solo_session
+    persona: ryo-ochiai
+    turns: 6
+    label: ryo_brejo_acolhimento
+
+  - day: 18
+    type: inject_status
+    persona: ryo-ochiai
+    dimension: emotional
+    value: baia
+    label: ryo_recovering
+
+  - day: 20
+    type: solo_session
+    persona: ryo-ochiai
+    turns: 10
+    label: ryo_return
+
+  - day: 21
+    type: gardner_advance
+    persona: ryo-ochiai
+    label: ryo_phase3_resumed
+
+  # ─── Semana 4+: consolidação ────────────────
+  - day: 23
+    type: solo_session
+    persona: kei-ochiai
+    turns: 10
+    label: kei_w4
+
+  - day: 25
+    type: joint_session
+    personas: [ryo-ochiai, kei-ochiai]
+    turns: 15
+    label: dyad_tribunal
+
+  - day: 28
+    type: gardner_advance
+    persona: ryo-ochiai
+    label: ryo_phase4_to_5
+
+  - day: 30
+    type: joint_session
+    personas: [ryo-ochiai, kei-ochiai]
+    turns: 12
+    label: dyad_final_stand_up

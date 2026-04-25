@@ -161,6 +161,106 @@ export interface PersonaNextMessageResult extends PersonaNextMessageOutput {
   };
 }
 
+/**
+ * sts#12 dual-provider: Anthropic OU Infomaniak baseado em
+ * PERSONA_SIM_PROVIDER (default: infomaniak / Kimi K2.5).
+ */
+async function callAnthropicPersona(
+  systemPrompt: string,
+  step: string,
+  debugMode: boolean,
+): Promise<{ textContent: string; reasoning?: string; tokens: { in: number; out: number }; latency_ms: number }> {
+  const apiKey = process.env["ANTHROPIC_API_KEY"];
+  if (!apiKey) {
+    throw new Error(
+      "ANTHROPIC_API_KEY não setado mas PERSONA_SIM_PROVIDER=anthropic. " +
+      "Carregue .env ou setar PERSONA_SIM_PROVIDER=infomaniak.",
+    );
+  }
+  const { default: Anthropic } = await import("@anthropic-ai/sdk");
+  const client = new Anthropic({ apiKey });
+  const { getLlmTimeoutMs, getLlmMaxRetries, getModelForStep, getMaxTokensForStep, shouldEnableThinking, getThinkingBudgetTokens } = await import("@ascendimacy/sts-shared");
+
+  const model = getModelForStep(step, "anthropic");
+  const maxTokens = getMaxTokensForStep(step, model);
+  const params: {
+    model: string;
+    max_tokens: number;
+    messages: Array<{ role: "user"; content: string }>;
+    thinking?: { type: "enabled"; budget_tokens: number };
+  } = {
+    model,
+    max_tokens: maxTokens,
+    messages: [{ role: "user", content: systemPrompt }],
+  };
+  if (shouldEnableThinking(step, "anthropic", debugMode)) {
+    params.thinking = { type: "enabled", budget_tokens: getThinkingBudgetTokens() };
+  }
+  const t0 = Date.now();
+  const response = await client.messages.create(
+    params as unknown as Parameters<typeof client.messages.create>[0],
+    {
+      timeout: getLlmTimeoutMs(step),
+      maxRetries: getLlmMaxRetries(step),
+    },
+  );
+  const latency_ms = Date.now() - t0;
+  let textContent = "";
+  let reasoning: string | undefined;
+  for (const block of (response as { content: Array<{ type: string; text?: string; thinking?: string }> }).content) {
+    if (block.type === "text" && block.text) textContent += block.text;
+    else if (block.type === "thinking" && block.thinking) reasoning = block.thinking;
+  }
+  if (!textContent) throw new Error("Unexpected response: no text block from persona LLM");
+  const usage = (response as { usage: { input_tokens: number; output_tokens: number } }).usage;
+  return { textContent, reasoning, tokens: { in: usage.input_tokens, out: usage.output_tokens }, latency_ms };
+}
+
+async function callInfomaniakPersona(
+  systemPrompt: string,
+  step: string,
+): Promise<{ textContent: string; reasoning?: string; tokens: { in: number; out: number }; latency_ms: number }> {
+  const apiKey = process.env["INFOMANIAK_API_KEY"];
+  if (!apiKey) {
+    throw new Error(
+      "INFOMANIAK_API_KEY não setado mas PERSONA_SIM_PROVIDER=infomaniak (default). " +
+      "Carregue .env ou setar PERSONA_SIM_PROVIDER=anthropic.",
+    );
+  }
+  const { default: OpenAI } = await import("openai");
+  const client = new OpenAI({
+    apiKey,
+    baseURL: process.env["INFOMANIAK_BASE_URL"] ?? "https://api.infomaniak.com/1/ai",
+  });
+  const { getLlmTimeoutMs, getLlmMaxRetries, getModelForStep, getMaxTokensForStep } = await import("@ascendimacy/sts-shared");
+  const model = getModelForStep(step, "infomaniak");
+  const maxTokens = getMaxTokensForStep(step, model);
+  const t0 = Date.now();
+  const response = await client.chat.completions.create(
+    {
+      model,
+      messages: [{ role: "user", content: systemPrompt }],
+      max_tokens: maxTokens,
+    },
+    {
+      timeout: getLlmTimeoutMs(step),
+      maxRetries: getLlmMaxRetries(step),
+    },
+  );
+  const latency_ms = Date.now() - t0;
+  const msg = response.choices[0]?.message;
+  const textContent = msg?.content ?? "";
+  const reasoning = (msg as { reasoning?: string } | undefined)?.reasoning;
+  if (!textContent) throw new Error("Unexpected response: no content from persona LLM");
+  const usage = response.usage;
+  return {
+    textContent,
+    reasoning,
+    tokens: { in: usage?.prompt_tokens ?? 0, out: usage?.completion_tokens ?? 0 },
+    latency_ms,
+  };
+}
+
 export async function getPersonaNextMessage(
   persona: PersonaDef,
   botMessage: string,
@@ -170,59 +270,18 @@ export async function getPersonaNextMessage(
     return getMockResponse(persona.id, Math.floor(history.length / 2));
   }
 
-  // sts#10: Anthropic SDK exige apiKey setado. Verificação explícita pra
-  // degradar com mensagem clara (era erro críptico "Could not resolve auth").
-  const apiKey = process.env["ANTHROPIC_API_KEY"];
-  if (!apiKey) {
-    throw new Error(
-      "ANTHROPIC_API_KEY não setado no ambiente do persona-simulator. " +
-      "Carregue .env antes de rodar: 'set -a; . .env; set +a'.",
-    );
-  }
-
-  const { default: Anthropic } = await import("@anthropic-ai/sdk");
-  const client = new Anthropic({ apiKey });
-
   const systemPrompt = buildSystemPrompt(persona, botMessage, history);
   const debugMode = process.env["ASC_DEBUG_MODE"] === "true" || process.env["ASC_DEBUG_MODE"] === "1";
 
-  // sts#10: bump 400→2048 (era apertado pra reasoning models).
-  // Extended thinking ON em debug mode.
-  const params: {
-    model: string;
-    max_tokens: number;
-    messages: Array<{ role: "user"; content: string }>;
-    thinking?: { type: "enabled"; budget_tokens: number };
-  } = {
-    model: "claude-sonnet-4-6",
-    max_tokens: 2048,
-    messages: [{ role: "user", content: systemPrompt }],
-  };
-  if (debugMode) {
-    params.thinking = { type: "enabled", budget_tokens: 1024 };
-  }
+  // sts#12: dispatch baseado em PERSONA_SIM_PROVIDER (default: infomaniak / Kimi K2.5)
+  const { getProviderForStep } = await import("@ascendimacy/sts-shared");
+  const provider = getProviderForStep("persona-sim");
 
-  // sts#11: timeout + retries explícitos.
-  const { getLlmTimeoutMs, getLlmMaxRetries } = await import("@ascendimacy/sts-shared");
-  const t0 = Date.now();
-  const response = await client.messages.create(
-    params as unknown as Parameters<typeof client.messages.create>[0],
-    {
-      timeout: getLlmTimeoutMs("persona-sim"),
-      maxRetries: getLlmMaxRetries("persona-sim"),
-    },
-  );
-  const latency_ms = Date.now() - t0;
+  const callResult = provider === "anthropic"
+    ? await callAnthropicPersona(systemPrompt, "persona-sim", debugMode)
+    : await callInfomaniakPersona(systemPrompt, "persona-sim");
 
-  let textContent = "";
-  let reasoning: string | undefined;
-  for (const block of (response as { content: Array<{ type: string; text?: string; thinking?: string }> }).content) {
-    if (block.type === "text" && block.text) textContent += block.text;
-    else if (block.type === "thinking" && block.thinking) reasoning = block.thinking;
-  }
-  if (!textContent) throw new Error("Unexpected response: no text block from persona LLM");
-
-  const usage = (response as { usage: { input_tokens: number; output_tokens: number } }).usage;
+  const { textContent, reasoning, tokens, latency_ms } = callResult;
   const parsed = parsePersonaResponse(textContent);
   return {
     ...parsed,
@@ -230,7 +289,7 @@ export async function getPersonaNextMessage(
       systemPrompt,
       rawResponse: textContent,
       reasoning,
-      tokens: { in: usage.input_tokens, out: usage.output_tokens },
+      tokens,
       latency_ms,
     },
   };

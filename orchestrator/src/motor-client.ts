@@ -314,8 +314,12 @@ export async function runMotorTurn(
 
   // ─── sts#8 auto-hook (espelha motor.orchestrator.runTurn pós-#17/#18) ──
   // Falha aqui não pode quebrar o turn — mesma garantia que motor#17.
+  // sts#14: agora também loga via debug-logger (faltava — débito de motor#19
+  // que só wired no motor.runTurn canônico, não no espelho sts.runMotorTurn).
   let emittedCardId: string | undefined;
   let cardEmissionSkipReason: string | undefined;
+  let signalKind: string | undefined;
+  const autoHookT0 = Date.now();
   try {
     const selectedItem = drota.selectedContent?.item;
     const gardnerObserved = selectedItem?.gardner_channels ?? [];
@@ -337,6 +341,7 @@ export async function runMotorTurn(
     });
     const signal = parseToolText<unknown>(detectResult);
     if (signal && typeof signal === "object" && (signal as { kind?: unknown }).kind) {
+      signalKind = String((signal as { kind?: unknown }).kind);
       const personaProfile = (persona.profile ?? {}) as Record<string, unknown>;
       const parentalProfile = personaProfile["parental_profile"];
       const emitResult = await motorExecucao.callTool({
@@ -364,6 +369,47 @@ export async function runMotorTurn(
   } catch (err) {
     cardEmissionSkipReason = `auto_hook_error:${String(err).slice(0, 120)}`;
   }
+  const autoHookMs = Date.now() - autoHookT0;
+
+  // sts#14: debug log do auto-hook (no-op se ASC_DEBUG_MODE off).
+  // Espelha o que motor#19 já fazia em motor.orchestrator.runTurn.
+  logDebugEvent({
+    side: "sts",
+    step: "auto-hook",
+    user_id: String((persona as { id: unknown }).id),
+    user_kind: "child",
+    motor_target: "kids",
+    session_id: sessionId,
+    turn_number: ((state as { turn?: number }).turn ?? null) as number | null,
+    provider: null,
+    model: null,
+    latency_ms: autoHookMs,
+    snapshots_pre: {
+      ebrota: {
+        prev_status_matrix: prevStatusMatrix ?? {},
+        current_status_matrix: currentStatusMatrix ?? {},
+        selected_content_id: drota.selectedContent?.item?.id ?? null,
+        gardner_channels: drota.selectedContent?.item?.gardner_channels ?? [],
+        casel_target: drota.selectedContent?.item?.casel_target ?? [],
+        sacrifice_amount: drota.selectedContent?.item?.sacrifice_amount ?? 0,
+      },
+    },
+    snapshots_post: {
+      ebrota: {
+        signal_kind: signalKind ?? null,
+        emitted_card_id: emittedCardId ?? null,
+        skip_reason: cardEmissionSkipReason ?? null,
+      },
+    },
+    outcome: emittedCardId
+      ? "ok"
+      : cardEmissionSkipReason?.startsWith("auto_hook_error")
+        ? "error"
+        : "skip",
+    error_class: cardEmissionSkipReason?.startsWith("auto_hook_error")
+      ? cardEmissionSkipReason
+      : null,
+  });
 
   return {
     botMessage: drota.linguisticMaterialization,

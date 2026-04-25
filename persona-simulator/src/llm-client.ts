@@ -202,8 +202,16 @@ export async function getPersonaNextMessage(
     params.thinking = { type: "enabled", budget_tokens: 1024 };
   }
 
+  // sts#11: timeout + retries explícitos.
+  const { getLlmTimeoutMs, getLlmMaxRetries } = await import("@ascendimacy/sts-shared");
   const t0 = Date.now();
-  const response = await client.messages.create(params as unknown as Parameters<typeof client.messages.create>[0]);
+  const response = await client.messages.create(
+    params as unknown as Parameters<typeof client.messages.create>[0],
+    {
+      timeout: getLlmTimeoutMs("persona-sim"),
+      maxRetries: getLlmMaxRetries("persona-sim"),
+    },
+  );
   const latency_ms = Date.now() - t0;
 
   let textContent = "";

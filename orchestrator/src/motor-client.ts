@@ -27,6 +27,27 @@ function buildEnv(): Record<string, string> {
     "ASC_DEBUG_MODE",
     "ASC_DEBUG_RUN_ID",
     "ASC_DEBUG_DIR",
+    // sts#13 router env keys (motor#21) — override per-callsite no motor side
+    "LLM_PROVIDER",
+    "PLANEJADOR_PROVIDER",
+    "PLANEJADOR_MODEL",
+    "PLANEJADOR_MAX_TOKENS",
+    "DROTA_PROVIDER",
+    "DROTA_MODEL",
+    "DROTA_MAX_TOKENS",
+    "HAIKU_TRIAGE_PROVIDER",
+    "HAIKU_TRIAGE_MODEL",
+    "HAIKU_BULLYING_PROVIDER",
+    "HAIKU_BULLYING_MODEL",
+    "HAIKU_MODEL", // legacy
+    "ASC_LLM_TIMEOUT_PLANEJADOR",
+    "ASC_LLM_TIMEOUT_DROTA",
+    "ASC_LLM_TIMEOUT_HAIKU_TRIAGE",
+    "ASC_LLM_TIMEOUT_SECONDS",
+    "ASC_LLM_MAX_RETRIES_PLANEJADOR",
+    "ASC_LLM_MAX_RETRIES_DROTA",
+    "ASC_LLM_MAX_RETRIES",
+    "LLM_THINKING_BUDGET_TOKENS",
   ];
   for (const k of keys) {
     const v = process.env[k];

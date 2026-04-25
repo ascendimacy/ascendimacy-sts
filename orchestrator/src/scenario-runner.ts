@@ -125,6 +125,17 @@ export async function runScenarioFromFile(opts: ScenarioRunOptions): Promise<Sce
     }
   }
 
+  // sts#11: per-event timeout. Default 180s — 30d scenario com evento travado
+  // não pendura indefinidamente. Override via ASC_EVENT_TIMEOUT_SECONDS.
+  const eventTimeoutMs = (() => {
+    const v = process.env["ASC_EVENT_TIMEOUT_SECONDS"];
+    if (v) {
+      const n = Number.parseInt(v, 10);
+      if (!Number.isNaN(n) && n > 0) return n * 1000;
+    }
+    return 180_000;
+  })();
+
   const outcomes: EventOutcome[] = [];
   for (const event of scenario.events) {
     const isoNow = dayToIso(scenario.start_date, event.day);
@@ -142,10 +153,28 @@ export async function runScenarioFromFile(opts: ScenarioRunOptions): Promise<Sce
     if (opts.verbose) {
       console.log(`[day ${event.day}] ${event.type} ${event.persona ?? event.personas?.join("+") ?? ""} (${isoNow.slice(0, 10)})`);
     }
-    const outcome = await dispatchEvent(event, ctx);
+    const startMs = Date.now();
+    const outcome = await Promise.race([
+      dispatchEvent(event, ctx),
+      new Promise<EventOutcome>((resolve) =>
+        setTimeout(
+          () =>
+            resolve({
+              day: event.day,
+              type: event.type,
+              persona: event.persona,
+              success: false,
+              duration_ms: Date.now() - startMs,
+              error: `event_timeout: exceeded ${eventTimeoutMs / 1000}s (ASC_EVENT_TIMEOUT_SECONDS)`,
+            }),
+          eventTimeoutMs,
+        ),
+      ),
+    ]);
     outcomes.push(outcome);
     if (opts.verbose) {
-      console.log(`  → ${outcome.success ? "✓" : "✗"} ${outcome.duration_ms}ms ${outcome.notes ?? outcome.error ?? ""}`);
+      const status = outcome.success ? "✓" : outcome.error?.startsWith("event_timeout") ? "⏱" : "✗";
+      console.log(`  → ${status} ${outcome.duration_ms}ms ${outcome.notes ?? outcome.error ?? ""}`);
     }
   }
 

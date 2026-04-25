@@ -10,7 +10,14 @@ let _client: Client | null = null;
 
 function buildEnv(): Record<string, string> {
   const env: Record<string, string> = {};
-  const keys = ["ANTHROPIC_API_KEY", "USE_MOCK_LLM"];
+  const keys = [
+    "ANTHROPIC_API_KEY",
+    "USE_MOCK_LLM",
+    // sts#10 debug mode — propaga pros persona-simulator child
+    "ASC_DEBUG_MODE",
+    "ASC_DEBUG_RUN_ID",
+    "ASC_DEBUG_DIR",
+  ];
   for (const k of keys) {
     const v = process.env[k];
     if (v) env[k] = v;

@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import { existsSync, readFileSync } from "fs";
 import yaml from "js-yaml";
 import type { MotorTurnResult } from "./types.js";
+import { logDebugEvent } from "@ascendimacy/sts-shared";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -22,6 +23,10 @@ function buildEnv(): Record<string, string> {
     "MOTOR_STATE_DIR",
     "EBROTA_CARD_SECRET",
     "NODE_ENV",
+    // sts#10 debug mode — propaga pros motor children (observability cross-processo)
+    "ASC_DEBUG_MODE",
+    "ASC_DEBUG_RUN_ID",
+    "ASC_DEBUG_DIR",
   ];
   for (const k of keys) {
     const v = process.env[k];

@@ -18,7 +18,7 @@
 import { readFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname, resolve, join } from "node:path";
 import yaml from "js-yaml";
-import { parseScenario, dayToIso } from "@ascendimacy/sts-shared";
+import { parseScenario, dayToIso, initDebugRun, isDebugModeEnabled } from "@ascendimacy/sts-shared";
 import type { Scenario, ScenarioEvent } from "@ascendimacy/sts-shared";
 import { dispatchEvent } from "./scenario-events.js";
 import type { EventOutcome, EventContext } from "./scenario-events.js";
@@ -100,12 +100,29 @@ export async function runScenarioFromFile(opts: ScenarioRunOptions): Promise<Sce
   const reportsDir = resolveReportsDir(scenario, opts.scenarioPath, opts.reportsDir);
   const mockLlm = opts.forceMockLlm ?? scenario.mock_llm ?? true;
 
+  // sts#10: inicializa debug run se flag ligado. Gera run_id auto + manifest +
+  // exporta ASC_DEBUG_RUN_ID pros children (motor + persona-simulator)
+  // propagarem via buildEnv().
+  let debugRunId: string | null = null;
+  if (isDebugModeEnabled()) {
+    debugRunId = initDebugRun({
+      scenarioName: scenario.name,
+      personas: scenario.personas ?? [],
+      parents: scenario.parents ?? [],
+      versions: { sts_schema: "1.0" },
+    });
+  }
+
   if (opts.verbose) {
     console.log(`[scenario] ${scenario.name}`);
     console.log(`[scenario] ${scenario.events.length} events, ${scenario.start_date} → ${scenario.end_date}`);
     console.log(`[scenario] state_dir: ${stateDir}`);
     console.log(`[scenario] reports_dir: ${reportsDir}`);
     console.log(`[scenario] mock_llm: ${mockLlm}`);
+    if (debugRunId) {
+      console.log(`[scenario] debug_run_id: ${debugRunId}`);
+      console.log(`[scenario] debug_dir: ${process.env["ASC_DEBUG_DIR"] ?? "./logs/debug"}/${debugRunId}`);
+    }
   }
 
   const outcomes: EventOutcome[] = [];

@@ -5,6 +5,7 @@ import { z } from "zod";
 import { loadPersonas, getPersona } from "./persona-loader.js";
 import { getPersonaNextMessage } from "./llm-client.js";
 import type { PersonaState } from "./types.js";
+import { logDebugEvent } from "@ascendimacy/sts-shared";
 
 const server = new McpServer({
   name: "persona-simulator",
@@ -55,10 +56,73 @@ function getState(personaId: string): PersonaState {
       return { content: [{ type: "text", text: JSON.stringify({ error: `Persona not found: ${args.personaId}` }) }] };
     }
     const state = getState(args.personaId);
-    const result = await getPersonaNextMessage(persona, args.botMessage, args.history ?? state.history);
-    state.history.push({ role: "assistant", content: args.botMessage });
-    state.history.push({ role: "user", content: result.message });
-    return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    const effectiveHistory = args.history ?? state.history;
+    const turnIndex = Math.floor(effectiveHistory.length / 2) + 1;
+
+    try {
+      const result = await getPersonaNextMessage(persona, args.botMessage, effectiveHistory);
+      state.history.push({ role: "assistant", content: args.botMessage });
+      state.history.push({ role: "user", content: result.message });
+
+      // sts#10: debug log (no-op se ASC_DEBUG_MODE off)
+      logDebugEvent({
+        side: "sts",
+        step: "persona-sim",
+        user_id: args.personaId,
+        user_kind: "child", // v1 assume child; futuro: lookup via persona.kind
+        motor_target: "kids",
+        turn_number: turnIndex,
+        model: "claude-sonnet-4-6",
+        provider: "anthropic",
+        tokens: result._debug
+          ? { in: result._debug.tokens.in, out: result._debug.tokens.out, reasoning: 0 }
+          : null,
+        latency_ms: result._debug?.latency_ms ?? null,
+        prompt: result._debug?.systemPrompt,
+        response: result._debug?.rawResponse,
+        reasoning: result._debug?.reasoning,
+        snapshots_pre: {
+          persona: {
+            persona_id: persona.id,
+            name: persona.name,
+            age: persona.age,
+            history_length: effectiveHistory.length,
+            history_tail_3: effectiveHistory.slice(-3),
+            mock_mode: false,
+            turn_index: turnIndex,
+            last_bot_message_preview: args.botMessage.slice(0, 160),
+          },
+        },
+        snapshots_post: {
+          persona: {
+            persona_id: persona.id,
+            history_length: state.history.length,
+            end_conversation: result.endConversation,
+            mood: result.metadata?.mood ?? null,
+            response_preview: result.message.slice(0, 160),
+          },
+        },
+        outcome: "ok",
+      });
+
+      // _debug nunca sai pra cliente MCP — strip antes de serializar
+      const { _debug: _omit, ...publicResult } = result as typeof result & { _debug?: unknown };
+      return { content: [{ type: "text", text: JSON.stringify(publicResult) }] };
+    } catch (err) {
+      logDebugEvent({
+        side: "sts",
+        step: "persona-sim",
+        user_id: args.personaId,
+        motor_target: "kids",
+        turn_number: turnIndex,
+        model: "claude-sonnet-4-6",
+        provider: "anthropic",
+        outcome: "error",
+        error_class: String((err as Error).name ?? "Error"),
+        response: String((err as Error).message ?? String(err)),
+      });
+      throw err;
+    }
   }
 );
 

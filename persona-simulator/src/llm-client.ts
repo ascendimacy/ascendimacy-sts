@@ -150,26 +150,80 @@ function parsePersonaResponse(raw: string): PersonaNextMessageOutput {
   };
 }
 
+export interface PersonaNextMessageResult extends PersonaNextMessageOutput {
+  /** sts#10 — prompt/reasoning/response pra debug log (não serializado em produção). */
+  _debug?: {
+    systemPrompt: string;
+    rawResponse: string;
+    reasoning?: string;
+    tokens: { in: number; out: number };
+    latency_ms: number;
+  };
+}
+
 export async function getPersonaNextMessage(
   persona: PersonaDef,
   botMessage: string,
   history: Array<{ role: "user" | "assistant"; content: string }>
-): Promise<PersonaNextMessageOutput> {
+): Promise<PersonaNextMessageResult> {
   if (process.env["USE_MOCK_LLM"] === "true") {
     return getMockResponse(persona.id, Math.floor(history.length / 2));
   }
 
+  // sts#10: Anthropic SDK exige apiKey setado. Verificação explícita pra
+  // degradar com mensagem clara (era erro críptico "Could not resolve auth").
+  const apiKey = process.env["ANTHROPIC_API_KEY"];
+  if (!apiKey) {
+    throw new Error(
+      "ANTHROPIC_API_KEY não setado no ambiente do persona-simulator. " +
+      "Carregue .env antes de rodar: 'set -a; . .env; set +a'.",
+    );
+  }
+
   const { default: Anthropic } = await import("@anthropic-ai/sdk");
-  const client = new Anthropic({ apiKey: process.env["ANTHROPIC_API_KEY"] });
+  const client = new Anthropic({ apiKey });
 
   const systemPrompt = buildSystemPrompt(persona, botMessage, history);
+  const debugMode = process.env["ASC_DEBUG_MODE"] === "true" || process.env["ASC_DEBUG_MODE"] === "1";
 
-  const response = await client.messages.create({
+  // sts#10: bump 400→2048 (era apertado pra reasoning models).
+  // Extended thinking ON em debug mode.
+  const params: {
+    model: string;
+    max_tokens: number;
+    messages: Array<{ role: "user"; content: string }>;
+    thinking?: { type: "enabled"; budget_tokens: number };
+  } = {
     model: "claude-sonnet-4-6",
-    max_tokens: 400,
+    max_tokens: 2048,
     messages: [{ role: "user", content: systemPrompt }],
-  });
+  };
+  if (debugMode) {
+    params.thinking = { type: "enabled", budget_tokens: 1024 };
+  }
 
-  const text = (response.content[0] as { type: string; text: string }).text;
-  return parsePersonaResponse(text);
+  const t0 = Date.now();
+  const response = await client.messages.create(params as unknown as Parameters<typeof client.messages.create>[0]);
+  const latency_ms = Date.now() - t0;
+
+  let textContent = "";
+  let reasoning: string | undefined;
+  for (const block of (response as { content: Array<{ type: string; text?: string; thinking?: string }> }).content) {
+    if (block.type === "text" && block.text) textContent += block.text;
+    else if (block.type === "thinking" && block.thinking) reasoning = block.thinking;
+  }
+  if (!textContent) throw new Error("Unexpected response: no text block from persona LLM");
+
+  const usage = (response as { usage: { input_tokens: number; output_tokens: number } }).usage;
+  const parsed = parsePersonaResponse(textContent);
+  return {
+    ...parsed,
+    _debug: {
+      systemPrompt,
+      rawResponse: textContent,
+      reasoning,
+      tokens: { in: usage.input_tokens, out: usage.output_tokens },
+      latency_ms,
+    },
+  };
 }

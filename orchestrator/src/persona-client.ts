@@ -17,6 +17,20 @@ function buildEnv(): Record<string, string> {
     "ASC_DEBUG_MODE",
     "ASC_DEBUG_RUN_ID",
     "ASC_DEBUG_DIR",
+    // sts#13: persona-simulator agora pode usar Infomaniak por default (motor#21).
+    // Sem essas keys propagadas, child throws "INFOMANIAK_API_KEY não setado".
+    "INFOMANIAK_API_KEY",
+    "INFOMANIAK_BASE_URL",
+    // sts#13: router env keys pra override per-callsite (motor#21)
+    "LLM_PROVIDER",
+    "PERSONA_SIM_PROVIDER",
+    "PERSONA_SIM_MODEL",
+    "PERSONA_SIM_MAX_TOKENS",
+    "ASC_LLM_TIMEOUT_PERSONA_SIM",
+    "ASC_LLM_MAX_RETRIES_PERSONA_SIM",
+    "ASC_LLM_TIMEOUT_SECONDS",
+    "ASC_LLM_MAX_RETRIES",
+    "LLM_THINKING_BUDGET_TOKENS",
   ];
   for (const k of keys) {
     const v = process.env[k];

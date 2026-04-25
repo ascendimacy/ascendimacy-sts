@@ -226,6 +226,7 @@ export async function runMotorTurn(
         gardner_channels?: string[];
         casel_target?: string[];
         sacrifice_type?: string;
+        sacrifice_amount?: number;
       };
       score?: number;
     };
@@ -265,7 +266,27 @@ export async function runMotorTurn(
   const trustLevel = exec.newState?.trustLevel ?? exec.trustLevel ?? 0.5;
   const budgetRemaining = exec.newState?.budgetRemaining ?? exec.budgetRemaining ?? 100;
 
-  // ─── sts#8 auto-hook (espelha motor.orchestrator.runTurn pós-#17) ──
+  // ─── sts#9 (mirror motor#18) — prev_matrix snapshot + re-fetch ───────
+  // Snapshot pré-turno tirado lá em cima (state.statusMatrix), agora re-fetch
+  // pra capturar matrix atualizada pelo execute_playbook. Habilita detecção
+  // de status_to_pasto + crossing (brejo→baia).
+  const prevStatusMatrix =
+    (state as { statusMatrix?: Record<string, string> }).statusMatrix
+      ? { ...(state as { statusMatrix: Record<string, string> }).statusMatrix }
+      : undefined;
+  let currentStatusMatrix = (state as { statusMatrix?: Record<string, string> }).statusMatrix;
+  try {
+    const newStateResult = await motorExecucao.callTool({
+      name: "get_state",
+      arguments: { sessionId },
+    });
+    const newState = parseToolText<{ statusMatrix?: Record<string, string> }>(newStateResult);
+    currentStatusMatrix = newState.statusMatrix ?? currentStatusMatrix;
+  } catch {
+    // Fallback: prev=curr (degrade gracioso, comportamento pré-#9).
+  }
+
+  // ─── sts#8 auto-hook (espelha motor.orchestrator.runTurn pós-#17/#18) ──
   // Falha aqui não pode quebrar o turn — mesma garantia que motor#17.
   let emittedCardId: string | undefined;
   let cardEmissionSkipReason: string | undefined;
@@ -273,16 +294,18 @@ export async function runMotorTurn(
     const selectedItem = drota.selectedContent?.item;
     const gardnerObserved = selectedItem?.gardner_channels ?? [];
     const caselTouched = selectedItem?.casel_target ?? [];
+    // sts#9 — sacrifice_amount vem do item (motor#18 enriqueceu seed.json)
+    const sacrificeSpent = Number(selectedItem?.sacrifice_amount ?? 0);
     const detectResult = await motorExecucao.callTool({
       name: "detect_achievement",
       arguments: {
         childId: persona.id,
         sessionId,
-        currentMatrix: (state as { statusMatrix?: Record<string, string> }).statusMatrix ?? {},
-        previousMatrix: (state as { statusMatrix?: Record<string, string> }).statusMatrix ?? {},
+        currentMatrix: currentStatusMatrix ?? {},
+        previousMatrix: prevStatusMatrix ?? {},
         gardnerObserved,
         caselTouched,
-        sacrificeSpent: 0,
+        sacrificeSpent,
         selectedContent: drota.selectedContent ?? {},
       },
     });

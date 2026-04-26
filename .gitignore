@@ -3,5 +3,23 @@ dist/
 *.db
 *.db-journal
 .env
+
+# Trace outputs (single-persona STS runs)
 traces/*.json
 reports/*.md
+
+# Scenario outputs (sts#6 scenario-runner) — entire dirs de run artifacts
+reports/smoke-3d/
+reports/nagareyama-30d/
+reports/**/consolidated.md
+reports/**/by-session.md
+reports/**/debug-consolidated.md
+reports/**/prompts-analysis.md
+
+# Debug logs (sts#10 debug mode) — events.ndjson + content/ + snapshots/ CAS
+# Contém PII (prompts de criança real). Nunca commitar.
+logs/
+.sts/
+
+# VSCode workspace files (local dev)
+*.code-workspace

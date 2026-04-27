@@ -102,7 +102,11 @@ export async function personaNextMessage(
     name: "persona_next_message",
     arguments: { personaId, botMessage, history },
   });
-  const text = (result.content as Array<{ type: string; text: string }>)[0]!.text;
+  const r = result as { content: Array<{ type: string; text: string }>; isError?: boolean };
+  const text = r.content?.find((c) => c.type === "text")?.text ?? "";
+  if (r.isError) {
+    throw new Error(`persona-sim MCP error: ${text.slice(0, 300)}`);
+  }
   return JSON.parse(text) as PersonaNextMessageOutput;
 }
 

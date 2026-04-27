@@ -122,9 +122,12 @@ function stripFence(raw: string): string {
 }
 
 function parseToolText<T>(result: unknown): T {
-  const content = (result as { content: Array<{ type: string; text: string }> }).content;
-  const raw = content.find((c) => c.type === "text")?.text ?? "{}";
-  return JSON.parse(stripFence(raw)) as T;
+  const r = result as { content: Array<{ type: string; text: string }>; isError?: boolean };
+  const raw = r.content?.find((c) => c.type === "text")?.text ?? "";
+  if (r.isError) {
+    throw new Error(`MCP tool error: ${raw.slice(0, 300)}`);
+  }
+  return JSON.parse(stripFence(raw || "{}")) as T;
 }
 
 interface MotorClients {

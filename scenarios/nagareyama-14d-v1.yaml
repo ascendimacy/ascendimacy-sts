@@ -1,0 +1,184 @@
+# nagareyama-14d-v1.yaml — Família Yuji 14 dias, real-llm via Infomaniak/Kimi
+#
+# Arquitetura proposta pelo Jun:
+#   D1-D3: quebra-gelo solo (Ryo + Kei separados, ~7 turns/dia, sem helix ativo)
+#   D4:    pausa simulada + weekly-report v1 (sem events; report consolidado)
+#   D5-D7: quebra-gelo continuado + helix v0 (gardner_advance entra em ação)
+#   D8-D11: helix completo (transitions.yaml shadow mode — events emitidos mas
+#           statusMatrix continua manual via inject_status nos days 5 + 10)
+#   D12:   pausa simulada + weekly-report v2 (compara semana 1 vs 2)
+#   D13-D14: dyad Ryo+Kei + análise final
+#
+# inject_status calendar (motor#25 transitions.yaml é shadow mode — não move
+# matrix automático; precisa inject manual pra simular progressão):
+#   Day 5:  ryo emotional → baia, kei cognitive_math → baia
+#   Day 10: ryo emotional → pasto, kei cognitive_math → pasto
+#
+# Cap turns: Ryo/Kei = 7 (criança engaja), Yuji/Yuko = 4 (parent quick check).
+#
+# Ver docs/handoffs/2026-04-26-cc-motor-pre-piloto-strategic-gaps.md (motor#26+)
+# pra Trigger Evaluator que automatiza inject_status post-piloto.
+
+name: nagareyama-14d-v1
+start_date: "2026-05-01T00:00:00Z"
+end_date: "2026-05-14T23:59:59Z"
+personas: [ryo-ochiai, kei-ochiai]
+parents: [yuji-ochiai, yuko-ochiai]
+mock_llm: false
+state_dir: ".sts/state/nagareyama-14d-v1"
+
+events:
+  # ─── Day 1: parent onboarding (cap 4 each) + 1ª solo Ryo ────────────
+  - day: 1
+    type: parent_onboarding
+    persona: yuji-ochiai
+    turns: 4
+    label: yuji_v1_onboarding
+
+  - day: 1
+    type: parent_onboarding
+    persona: yuko-ochiai
+    turns: 4
+    label: yuko_v1_onboarding
+
+  - day: 1
+    type: solo_session
+    persona: ryo-ochiai
+    turns: 7
+    label: ryo_d1_icebreak
+
+  # ─── Day 2: solo + solo (quebra-gelo) ─────────────────────────────
+  - day: 2
+    type: solo_session
+    persona: kei-ochiai
+    turns: 7
+    label: kei_d2_icebreak
+
+  - day: 2
+    type: solo_session
+    persona: ryo-ochiai
+    turns: 7
+    label: ryo_d2_icebreak
+
+  # ─── Day 3: solo + solo + close de quebra-gelo ────────────────────
+  - day: 3
+    type: solo_session
+    persona: kei-ochiai
+    turns: 7
+    label: kei_d3_icebreak
+
+  - day: 3
+    type: solo_session
+    persona: ryo-ochiai
+    turns: 7
+    label: ryo_d3_icebreak_close
+
+  # ─── Day 4: pausa simulada (sem events; report consolidado v1) ────
+
+  # ─── Day 5: inject brejo→baia + 1ª solo helix v0 ──────────────────
+  # NOTA: inject_status hoje é UNCONDICIONAL (motor#25 transitions.yaml é
+  # shadow mode). Pós-piloto motor#26+ pode tornar conditional via
+  # transition_evaluated event lookup. v1 simula progressão "natural" pelo
+  # calendário pra exercitar status_to_pasto + crossing kinds em
+  # detectAchievement.
+  - day: 5
+    type: inject_status
+    persona: ryo-ochiai
+    dimension: emotional
+    value: baia
+    label: ryo_d5_brejo_to_baia_unconditional
+
+  - day: 5
+    type: inject_status
+    persona: kei-ochiai
+    dimension: cognitive_math
+    value: baia
+    label: kei_d5_brejo_to_baia_unconditional
+
+  - day: 5
+    type: solo_session
+    persona: ryo-ochiai
+    turns: 7
+    label: ryo_d5_helix_intro
+
+  # ─── Day 6: solo Kei pós-inject ──────────────────────────────────
+  - day: 6
+    type: solo_session
+    persona: kei-ochiai
+    turns: 7
+    label: kei_d6_helix_intro
+
+  # ─── Day 7: gardner_advance Ryo + solo follow-up ─────────────────
+  - day: 7
+    type: gardner_advance
+    persona: ryo-ochiai
+    label: ryo_d7_gardner_advance_w1_w2
+
+  - day: 7
+    type: solo_session
+    persona: ryo-ochiai
+    turns: 7
+    label: ryo_d7_post_gardner
+
+  # ─── Day 8: solo Kei + gardner_advance Kei ───────────────────────
+  - day: 8
+    type: gardner_advance
+    persona: kei-ochiai
+    label: kei_d8_gardner_advance_w1_w2
+
+  - day: 8
+    type: solo_session
+    persona: kei-ochiai
+    turns: 7
+    label: kei_d8_post_gardner
+
+  # ─── Day 9: solo Ryo (helix completo) ────────────────────────────
+  - day: 9
+    type: solo_session
+    persona: ryo-ochiai
+    turns: 7
+    label: ryo_d9_helix_full
+
+  # ─── Day 10: inject baia→pasto + solo ────────────────────────────
+  - day: 10
+    type: inject_status
+    persona: ryo-ochiai
+    dimension: emotional
+    value: pasto
+    label: ryo_d10_baia_to_pasto_unconditional
+
+  - day: 10
+    type: inject_status
+    persona: kei-ochiai
+    dimension: cognitive_math
+    value: pasto
+    label: kei_d10_baia_to_pasto_unconditional
+
+  - day: 10
+    type: solo_session
+    persona: ryo-ochiai
+    turns: 7
+    label: ryo_d10_post_pasto
+
+  # ─── Day 11: solo Kei pós-pasto ──────────────────────────────────
+  - day: 11
+    type: solo_session
+    persona: kei-ochiai
+    turns: 7
+    label: kei_d11_post_pasto
+
+  # ─── Day 12: pausa simulada (sem events; report consolidado v2) ───
+
+  # ─── Day 13: dyad primeiro (Bloco 6) ─────────────────────────────
+  - day: 13
+    type: joint_session
+    personas: [ryo-ochiai, kei-ochiai]
+    turns: 10
+    label: dyad_d13_first
+
+  # ─── Day 14: dyad final + análise ────────────────────────────────
+  - day: 14
+    type: joint_session
+    personas: [ryo-ochiai, kei-ochiai]
+    turns: 10
+    label: dyad_d14_final

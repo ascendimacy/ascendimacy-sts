@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+import { readFileSync } from "node:fs";
+import yaml from "js-yaml";
+import { parseScenario } from "@ascendimacy/sts-shared";
 import { runScenario } from "./orchestrator.js";
 import { runScenarioFromFile } from "./scenario-runner.js";
 import { getMotorClients, closeMotorClients } from "./motor-client.js";
@@ -22,7 +25,7 @@ function printUsageAndExit(code: number): never {
     [
       "Usage:",
       "  npx sts run --persona <id> --turns <n> [--dry-run]",
-      "  npx sts run-scenario <path-to-scenario.yaml> [--verbose] [--real-llm] [--reports-dir <dir>]",
+      "  npx sts run-scenario <path-to-scenario.yaml> [--verbose] [--real-llm] [--reports-dir <dir>] [--dry-run]",
     ].join("\n"),
   );
   process.exit(code);
@@ -44,17 +47,49 @@ async function handleRun(argv: string[]): Promise<void> {
 
 async function handleRunScenario(argv: string[]): Promise<void> {
   let scenarioPath: string | undefined;
-  const opts: { verbose?: boolean; reportsDir?: string; forceMockLlm?: boolean } = {};
+  const opts: {
+    verbose?: boolean;
+    reportsDir?: string;
+    forceMockLlm?: boolean;
+    dryRun?: boolean;
+  } = {};
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--verbose") opts.verbose = true;
     else if (a === "--real-llm") opts.forceMockLlm = false;
     else if (a === "--reports-dir" && argv[i + 1]) opts.reportsDir = argv[++i];
+    else if (a === "--dry-run") opts.dryRun = true;
     else if (a && !a.startsWith("--")) scenarioPath = a;
   }
   if (!scenarioPath) {
     console.error("Error: scenario path is required");
     printUsageAndExit(1);
+  }
+
+  // Dry-run: parseia + valida o YAML sem rodar eventos. Útil pra verificar
+  // que um scenario novo carrega antes de gastar LLM/tempo. Exit 0 em valid,
+  // 1 em invalid.
+  if (opts.dryRun) {
+    try {
+      const raw = yaml.load(readFileSync(scenarioPath!, "utf-8"));
+      const result = parseScenario(raw);
+      if (!result.valid || !result.scenario) {
+        console.error("[STS] Scenario invalid:");
+        for (const err of result.errors) console.error(`  - ${err}`);
+        process.exit(1);
+      }
+      console.log(`[STS] Scenario "${result.scenario.name}" is valid.`);
+      console.log(
+        `  start=${result.scenario.start_date} end=${result.scenario.end_date}`,
+      );
+      console.log(
+        `  personas=${result.scenario.personas.length} parents=${result.scenario.parents.length} events=${result.scenario.events.length}`,
+      );
+      process.exit(0);
+    } catch (err) {
+      console.error(`[STS] Dry-run failed: ${(err as Error).message}`);
+      process.exit(1);
+    }
   }
 
   // Factory de clients — reconecta on-demand. Necessário porque runScenario

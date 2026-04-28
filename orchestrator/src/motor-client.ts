@@ -9,6 +9,20 @@ import { logDebugEvent } from "@ascendimacy/sts-shared";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+/**
+ * Timeout pra cada chamada MCP em ms.
+ *
+ * Default MCP SDK é 60s — insuficiente pra pipeline real-llm que pode
+ * encadear 2-4 chamadas LLM (Sonnet planejador + Kimi drota + Haiku
+ * triage etc.). Default aqui é 180s; override via STS_MCP_TIMEOUT_MS.
+ *
+ * Pra debugar timeouts, subir pra 300000 (5 min). Pra forçar fail-fast
+ * em smoke determinístico, descer pra 30000.
+ */
+const MCP_REQUEST_TIMEOUT = Number(
+  process.env["STS_MCP_TIMEOUT_MS"] ?? "180000",
+);
+
 function buildEnv(): Record<string, string> {
   const env: Record<string, string> = {};
   const keys = [
@@ -221,13 +235,21 @@ export async function runMotorTurn(
   const { persona, adquirente, inventory } = loadMotorFixtures(motorPath, personaId);
   const { planejador, motorDrota, motorExecucao } = clients;
 
-  const stateResult = await motorExecucao.callTool({ name: "get_state", arguments: { sessionId } });
+  const stateResult = await motorExecucao.callTool(
+    { name: "get_state", arguments: { sessionId } },
+    undefined,
+    { timeout: MCP_REQUEST_TIMEOUT },
+  );
   const state = parseToolText<Record<string, unknown>>(stateResult);
 
-  const planResult = await planejador.callTool({
-    name: "plan_turn",
-    arguments: { sessionId, persona, adquirente, inventory, state, incomingMessage: personaMessage },
-  });
+  const planResult = await planejador.callTool(
+    {
+      name: "plan_turn",
+      arguments: { sessionId, persona, adquirente, inventory, state, incomingMessage: personaMessage },
+    },
+    undefined,
+    { timeout: MCP_REQUEST_TIMEOUT },
+  );
   const plan = parseToolText<{
     contentPool?: unknown[];
     strategicRationale?: string;
@@ -235,18 +257,22 @@ export async function runMotorTurn(
     instruction_addition?: string;
   }>(planResult);
 
-  const drotaResult = await motorDrota.callTool({
-    name: "evaluate_and_select",
-    arguments: {
-      sessionId,
-      contentPool: plan.contentPool ?? [],
-      state,
-      persona,
-      strategicRationale: plan.strategicRationale ?? "",
-      contextHints: plan.contextHints ?? {},
-      instruction_addition: plan.instruction_addition ?? "",
+  const drotaResult = await motorDrota.callTool(
+    {
+      name: "evaluate_and_select",
+      arguments: {
+        sessionId,
+        contentPool: plan.contentPool ?? [],
+        state,
+        persona,
+        strategicRationale: plan.strategicRationale ?? "",
+        contextHints: plan.contextHints ?? {},
+        instruction_addition: plan.instruction_addition ?? "",
+      },
     },
-  });
+    undefined,
+    { timeout: MCP_REQUEST_TIMEOUT },
+  );
   let drota = parseToolText<{
     selectedContent?: {
       item?: {
@@ -277,16 +303,20 @@ export async function runMotorTurn(
   const deployProfileId = (inventory[0] as { id?: string } | undefined)?.id ?? "default";
   const selectedContentId = drota.selectedContent?.item?.id ?? "";
 
-  const execResult = await motorExecucao.callTool({
-    name: "execute_playbook",
-    arguments: {
-      sessionId,
-      playbookId: deployProfileId,
-      selectedContentId,
-      output: drota.linguisticMaterialization,
-      metadata: {},
+  const execResult = await motorExecucao.callTool(
+    {
+      name: "execute_playbook",
+      arguments: {
+        sessionId,
+        playbookId: deployProfileId,
+        selectedContentId,
+        output: drota.linguisticMaterialization,
+        metadata: {},
+      },
     },
-  });
+    undefined,
+    { timeout: MCP_REQUEST_TIMEOUT },
+  );
   const exec = parseToolText<{
     newState?: { trustLevel?: number; budgetRemaining?: number };
     trustLevel?: number;
@@ -305,10 +335,14 @@ export async function runMotorTurn(
       : undefined;
   let currentStatusMatrix = (state as { statusMatrix?: Record<string, string> }).statusMatrix;
   try {
-    const newStateResult = await motorExecucao.callTool({
-      name: "get_state",
-      arguments: { sessionId },
-    });
+    const newStateResult = await motorExecucao.callTool(
+      {
+        name: "get_state",
+        arguments: { sessionId },
+      },
+      undefined,
+      { timeout: MCP_REQUEST_TIMEOUT },
+    );
     const newState = parseToolText<{ statusMatrix?: Record<string, string> }>(newStateResult);
     currentStatusMatrix = newState.statusMatrix ?? currentStatusMatrix;
   } catch {
@@ -329,32 +363,40 @@ export async function runMotorTurn(
     const caselTouched = selectedItem?.casel_target ?? [];
     // sts#9 — sacrifice_amount vem do item (motor#18 enriqueceu seed.json)
     const sacrificeSpent = Number(selectedItem?.sacrifice_amount ?? 0);
-    const detectResult = await motorExecucao.callTool({
-      name: "detect_achievement",
-      arguments: {
-        childId: persona.id,
-        sessionId,
-        currentMatrix: currentStatusMatrix ?? {},
-        previousMatrix: prevStatusMatrix ?? {},
-        gardnerObserved,
-        caselTouched,
-        sacrificeSpent,
-        selectedContent: drota.selectedContent ?? {},
+    const detectResult = await motorExecucao.callTool(
+      {
+        name: "detect_achievement",
+        arguments: {
+          childId: persona.id,
+          sessionId,
+          currentMatrix: currentStatusMatrix ?? {},
+          previousMatrix: prevStatusMatrix ?? {},
+          gardnerObserved,
+          caselTouched,
+          sacrificeSpent,
+          selectedContent: drota.selectedContent ?? {},
+        },
       },
-    });
+      undefined,
+      { timeout: MCP_REQUEST_TIMEOUT },
+    );
     const signal = parseToolText<unknown>(detectResult);
     if (signal && typeof signal === "object" && (signal as { kind?: unknown }).kind) {
       signalKind = String((signal as { kind?: unknown }).kind);
       const personaProfile = (persona.profile ?? {}) as Record<string, unknown>;
       const parentalProfile = personaProfile["parental_profile"];
-      const emitResult = await motorExecucao.callTool({
-        name: "emit_card_for_signal",
-        arguments: {
-          signal,
-          childName: persona.name,
-          parentalProfile: parentalProfile && typeof parentalProfile === "object" ? parentalProfile : undefined,
+      const emitResult = await motorExecucao.callTool(
+        {
+          name: "emit_card_for_signal",
+          arguments: {
+            signal,
+            childName: persona.name,
+            parentalProfile: parentalProfile && typeof parentalProfile === "object" ? parentalProfile : undefined,
+          },
         },
-      });
+        undefined,
+        { timeout: MCP_REQUEST_TIMEOUT },
+      );
       const emitOutput = parseToolText<{
         ok?: boolean;
         card_id?: string;

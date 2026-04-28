@@ -1,0 +1,126 @@
+# Nagareyama 14d v1 — close gate motor#28 + sub-piloto pré-Yuji.
+#
+# Subset de nagareyama-30d (foco em 14 dias, 2 personas, virtual_clock JST).
+# Spec: ascendimacy-ops/docs/handoffs/2026-04-28-implementation-plan-gaps-pre-piloto.md §A-04
+# Test plan: ascendimacy-ops/docs/tests/pilot-test-plan-nagareyama-v1.md §STS-05
+#
+# Cadência: 3 sessões/persona/semana × 2 semanas = 6 sessões/persona,
+# 8 turns/sessão (config dos personas, não do scenario schema).
+#
+# ─── Rubric thresholds (consumidos por aggregate-gateway-logs.mjs) ──────
+# B_turn_success_threshold: 0.90
+# C_sla_threshold_ms: 15000
+# C_pass_rate_threshold: 0.90
+# entropy_min_avg: 0.50
+# archetype_repetition_max: 3
+#
+# Esses campos não estão no schema atual de scenario.ts (parseScenario)
+# — ficam em comentário até DT-* futura estender o schema. aggregate-
+# gateway-logs.mjs pega thresholds via env/CLI args independente.
+#
+# ─── child_ids (consumidos por motor-execucao após A-03 / GAP-08) ──────
+# ryo-ochiai: child_id = nagareyama-ryo-001
+# kei-ochiai: child_id = nagareyama-kei-001
+#
+# Persona configs (cultural_context: ja, profile_id: kids, deflective vs
+# philosophical) ficam nos persona YAML files, não aqui.
+
+name: nagareyama-14d-v1
+
+# Virtual start: 2026-05-01 09:00 JST = 2026-05-01 00:00 UTC.
+# Schema usa start_date/end_date (ISO UTC); dayToIso() já trata virtual clock.
+start_date: "2026-05-01T00:00:00Z"
+end_date: "2026-05-14T23:59:59Z"
+
+personas: [ryo-ochiai, kei-ochiai]
+parents: [yuji-ochiai, yuko-ochiai]
+
+mock_llm: true
+state_dir: ".sts/state/nagareyama-14d-v1"
+
+events:
+  # ─── Semana 1: onboarding parental + 3 sessões/persona ────────────────
+  - day: 1
+    type: parent_onboarding
+    persona: yuji-ochiai
+    turns: 8
+    label: yuji_onboarding
+
+  - day: 1
+    type: parent_onboarding
+    persona: yuko-ochiai
+    turns: 6
+    label: yuko_onboarding
+
+  - day: 2
+    type: solo_session
+    persona: ryo-ochiai
+    turns: 8
+    label: ryo_w1_s1
+
+  - day: 3
+    type: solo_session
+    persona: kei-ochiai
+    turns: 8
+    label: kei_w1_s1
+
+  - day: 5
+    type: solo_session
+    persona: ryo-ochiai
+    turns: 8
+    label: ryo_w1_s2
+
+  - day: 6
+    type: solo_session
+    persona: kei-ochiai
+    turns: 8
+    label: kei_w1_s2
+
+  - day: 7
+    type: solo_session
+    persona: ryo-ochiai
+    turns: 8
+    label: ryo_w1_s3
+
+  # ─── Semana 2: 3 sessões/persona + 1 joint validador de divergência ───
+  - day: 8
+    type: solo_session
+    persona: kei-ochiai
+    turns: 8
+    label: kei_w1_s3
+
+  - day: 9
+    type: solo_session
+    persona: ryo-ochiai
+    turns: 8
+    label: ryo_w2_s1
+
+  - day: 10
+    type: solo_session
+    persona: kei-ochiai
+    turns: 8
+    label: kei_w2_s1
+
+  - day: 11
+    type: joint_session
+    personas: [ryo-ochiai, kei-ochiai]
+    turns: 10
+    label: dyad_w2_validacao_divergencia
+
+  - day: 12
+    type: solo_session
+    persona: ryo-ochiai
+    turns: 8
+    label: ryo_w2_s2
+
+  - day: 13
+    type: solo_session
+    persona: kei-ochiai
+    turns: 8
+    label: kei_w2_s2
+
+  - day: 14
+    type: solo_session
+    persona: ryo-ochiai
+    turns: 8
+    label: ryo_w2_s3

@@ -90,6 +90,7 @@ function loadMotorFixtures(motorPath: string, personaId: string): {
     profile: typeof personaRaw["profile"] === "string"
       ? { summary: personaRaw["profile"] }
       : (personaRaw["profile"] as Record<string, unknown>) ?? { summary: String(personaRaw["description"] ?? "").slice(0, 300) },
+    child_id: personaRaw["child_id"] ? String(personaRaw["child_id"]) : undefined,
   };
 
   const adquirentePath = join(motorPath, "fixtures/adquirente-jun.md");
@@ -221,7 +222,10 @@ export async function runMotorTurn(
   const { persona, adquirente, inventory } = loadMotorFixtures(motorPath, personaId);
   const { planejador, motorDrota, motorExecucao } = clients;
 
-  const stateResult = await motorExecucao.callTool({ name: "get_state", arguments: { sessionId } });
+  const stateResult = await motorExecucao.callTool({
+    name: "get_state",
+    arguments: { sessionId, ...(persona.child_id ? { childId: persona.child_id } : {}) },
+  });
   const state = parseToolText<Record<string, unknown>>(stateResult);
 
   const planResult = await planejador.callTool({
@@ -281,6 +285,7 @@ export async function runMotorTurn(
     name: "execute_playbook",
     arguments: {
       sessionId,
+      ...(persona.child_id ? { childId: persona.child_id } : {}),
       playbookId: deployProfileId,
       selectedContentId,
       output: drota.linguisticMaterialization,
@@ -307,7 +312,7 @@ export async function runMotorTurn(
   try {
     const newStateResult = await motorExecucao.callTool({
       name: "get_state",
-      arguments: { sessionId },
+      arguments: { sessionId, ...(persona.child_id ? { childId: persona.child_id } : {}) },
     });
     const newState = parseToolText<{ statusMatrix?: Record<string, string> }>(newStateResult);
     currentStatusMatrix = newState.statusMatrix ?? currentStatusMatrix;

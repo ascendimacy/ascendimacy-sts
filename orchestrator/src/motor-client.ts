@@ -257,10 +257,24 @@ export async function runMotorTurn(
   );
   const state = parseToolText<Record<string, unknown>>(stateResult);
 
+  // motor#H5: load + lazy bootstrap Helix via MCP tool init_helix (idempotente).
+  let helixState: Record<string, unknown> | null = null;
+  try {
+    const initResult = await motorExecucao.callTool(
+      { name: "init_helix", arguments: { childId: persona.id } },
+      undefined,
+      { timeout: MCP_REQUEST_TIMEOUT },
+    );
+    const parsedInit = parseToolText<{ state: Record<string, unknown>; bootstrapped: boolean }>(initResult);
+    helixState = parsedInit.state;
+  } catch {
+    // Fail-soft: helix indisponível → planejador faz fallback statusMatrix
+  }
+
   const planResult = await planejador.callTool(
     {
       name: "plan_turn",
-      arguments: { sessionId, persona, adquirente, inventory, state, incomingMessage: personaMessage },
+      arguments: { sessionId, persona, adquirente, inventory, state, incomingMessage: personaMessage, helixState },
     },
     undefined,
     { timeout: MCP_REQUEST_TIMEOUT },
@@ -470,6 +484,24 @@ export async function runMotorTurn(
       ? cardEmissionSkipReason
       : null,
   });
+
+  // motor#H5: Helix advance no fim do turn (via MCP tool advance_helix).
+  // Heurística MVP — delta proxy via trustLevel growth, mood proxy via trustLevel absoluto.
+  if (helixState && !(helixState as { vacationModeActive?: boolean }).vacationModeActive) {
+    const prevTrust = (state.trustLevel as number | undefined) ?? 0.3;
+    const trustDelta = trustLevel - prevTrust;
+    const delta = trustDelta > 0.02 ? 0.10 : trustDelta > 0 ? 0.05 : 0;
+    const moodProxy = trustLevel >= 0.4 ? 8 : 2;
+    try {
+      await motorExecucao.callTool(
+        { name: "advance_helix", arguments: { childId: persona.id, delta, mood: moodProxy } },
+        undefined,
+        { timeout: MCP_REQUEST_TIMEOUT },
+      );
+    } catch {
+      // Fail-soft
+    }
+  }
 
   return {
     botMessage: drota.linguisticMaterialization,

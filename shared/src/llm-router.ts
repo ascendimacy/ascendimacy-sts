@@ -17,7 +17,7 @@
  *   PERSONA_SIM_MODEL=mistral3
  */
 
-export type LlmProvider = "anthropic" | "infomaniak";
+export type LlmProvider = "anthropic" | "infomaniak" | "local";
 
 /** Steps válidos com config defaults. */
 export const LLM_STEPS = [
@@ -81,9 +81,9 @@ function envKey(step: string, suffix: string): string {
  */
 export function getProviderForStep(step: string): LlmProvider {
   const perStep = process.env[envKey(step, "PROVIDER")];
-  if (perStep === "anthropic" || perStep === "infomaniak") return perStep;
+  if (perStep === "anthropic" || perStep === "infomaniak" || perStep === "local") return perStep;
   const global = process.env["LLM_PROVIDER"];
-  if (global === "anthropic" || global === "infomaniak") return global;
+  if (global === "anthropic" || global === "infomaniak" || global === "local") return global;
   return DEFAULT_PROVIDERS[step as LlmStep] ?? "infomaniak";
 }
 

@@ -216,6 +216,43 @@ async function callAnthropicPersona(
   return { textContent, reasoning, tokens: { in: usage.input_tokens, out: usage.output_tokens }, latency_ms };
 }
 
+async function callLocalPersona(
+  systemPrompt: string,
+  step: string,
+): Promise<{ textContent: string; reasoning?: string; tokens: { in: number; out: number }; latency_ms: number }> {
+  const baseURL = process.env["LOCAL_LLM_BASE_URL"] ?? "http://localhost:8000/v1";
+  const model = process.env["LOCAL_LLM_MODEL"] ?? "qwen2.5";
+  const apiKey = process.env["LOCAL_LLM_API_KEY"] ?? "local";
+
+  const { default: OpenAI } = await import("openai");
+  const client = new OpenAI({ apiKey, baseURL });
+  const { getLlmTimeoutMs, getLlmMaxRetries, getMaxTokensForStep } = await import("@ascendimacy/sts-shared");
+  const maxTokens = getMaxTokensForStep(step, model);
+
+  const t0 = Date.now();
+  const response = await client.chat.completions.create({
+    model,
+    messages: [{ role: "user", content: systemPrompt }],
+    max_tokens: maxTokens,
+    temperature: 0.9,
+    seed: Math.floor(Math.random() * 2 ** 31),
+  }, {
+    timeout: getLlmTimeoutMs(step),
+    maxRetries: getLlmMaxRetries(step),
+  });
+  const latency_ms = Date.now() - t0;
+  const msg = response.choices[0]?.message;
+  const textContent = msg?.content ?? "";
+  if (!textContent) throw new Error("Unexpected response: no content from persona LLM (local)");
+  const usage = response.usage;
+  return {
+    textContent,
+    reasoning: undefined,
+    tokens: { in: usage?.prompt_tokens ?? 0, out: usage?.completion_tokens ?? 0 },
+    latency_ms,
+  };
+}
+
 async function callInfomaniakPersona(
   systemPrompt: string,
   step: string,
@@ -279,7 +316,9 @@ export async function getPersonaNextMessage(
 
   const callResult = provider === "anthropic"
     ? await callAnthropicPersona(systemPrompt, "persona-sim", debugMode)
-    : await callInfomaniakPersona(systemPrompt, "persona-sim");
+    : provider === "local"
+      ? await callLocalPersona(systemPrompt, "persona-sim")
+      : await callInfomaniakPersona(systemPrompt, "persona-sim");
 
   const { textContent, reasoning, tokens, latency_ms } = callResult;
   const parsed = parsePersonaResponse(textContent);

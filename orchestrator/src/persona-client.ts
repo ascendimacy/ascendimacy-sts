@@ -31,6 +31,10 @@ function buildEnv(): Record<string, string> {
     "ASC_LLM_TIMEOUT_SECONDS",
     "ASC_LLM_MAX_RETRIES",
     "LLM_THINKING_BUDGET_TOKENS",
+    // Local provider (vLLM / OVMS / llama-server) — motor-simplificacao-v1
+    "LOCAL_LLM_BASE_URL",
+    "LOCAL_LLM_MODEL",
+    "LOCAL_LLM_API_KEY",
   ];
   for (const k of keys) {
     const v = process.env[k];

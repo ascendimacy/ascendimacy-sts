@@ -17,7 +17,7 @@
  *   PERSONA_SIM_MODEL=mistral3
  */
 
-export type LlmProvider = "anthropic" | "infomaniak" | "local";
+export type LlmProvider = "anthropic" | "infomaniak" | "local" | "mock";
 
 /** Steps válidos com config defaults. */
 export const LLM_STEPS = [

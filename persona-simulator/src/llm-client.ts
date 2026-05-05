@@ -151,16 +151,52 @@ Lembre-se:
 - JSON schema obrigatório: {"message": string, "endConversation": boolean, "metadata": {"mood": string}}.`;
 }
 
+/**
+ * Extrai o PRIMEIRO objeto JSON balanceado a partir de uma string.
+ * Tolerante a texto antes/depois (Qwen3-8B às vezes emite explicação extra).
+ * Respeita aspas escapadas dentro de strings JSON.
+ * Retorna null se nenhum objeto fechado é encontrado.
+ */
+function extractFirstBalancedJsonObject(input: string): string | null {
+  const start = input.indexOf("{");
+  if (start < 0) return null;
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+  for (let i = start; i < input.length; i++) {
+    const ch = input[i];
+    if (escape) {
+      escape = false;
+      continue;
+    }
+    if (ch === "\\") {
+      if (inString) escape = true;
+      continue;
+    }
+    if (ch === '"') {
+      inString = !inString;
+      continue;
+    }
+    if (inString) continue;
+    if (ch === "{") depth++;
+    else if (ch === "}") {
+      depth--;
+      if (depth === 0) return input.slice(start, i + 1);
+    }
+  }
+  return null;
+}
+
 function parsePersonaResponse(raw: string): PersonaNextMessageOutput {
   let cleaned = raw.trim();
   if (cleaned.startsWith("```")) {
     cleaned = cleaned.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
   }
-  const firstBrace = cleaned.indexOf("{");
-  const lastBrace = cleaned.lastIndexOf("}");
-  if (firstBrace >= 0 && lastBrace > firstBrace) {
-    cleaned = cleaned.slice(firstBrace, lastBrace + 1);
-  }
+  // 2026-05-05: extrai PRIMEIRO objeto JSON balanceado pra tolerar
+  // modelos (Qwen3-8B em particular) que emitem texto extra após o objeto.
+  // Antes: firstBrace..lastBrace slice falhava se modelo emitisse 2+ objetos.
+  const balanced = extractFirstBalancedJsonObject(cleaned);
+  if (balanced) cleaned = balanced;
   const parsed = JSON.parse(cleaned) as {
     message?: string;
     endConversation?: boolean;
@@ -257,12 +293,20 @@ async function callLocalPersona(
   const maxTokens = getMaxTokensForStep(step, model);
 
   const t0 = Date.now();
+  // 2026-05-05: Qwen3 hybrid thinking off por default (override via LOCAL_LLM_THINKING=true).
+  // OpenAI SDK não tipa chat_template_kwargs — passa via cast.
   const response = await client.chat.completions.create({
     model,
     messages: [{ role: "user", content: systemPrompt }],
     max_tokens: maxTokens,
     temperature: 0.9,
     seed: Math.floor(Math.random() * 2 ** 31),
+    // @ts-expect-error - chat_template_kwargs não está no schema OpenAI mas
+    // OVMS / vLLM aceitam pra controle de Qwen3 thinking mode
+    chat_template_kwargs: {
+      enable_thinking:
+        process.env["LOCAL_LLM_THINKING"] === "true" ? true : false,
+    },
   }, {
     timeout: getLlmTimeoutMs(step),
     maxRetries: getLlmMaxRetries(step),

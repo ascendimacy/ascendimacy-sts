@@ -46,8 +46,27 @@ function buildSystemPrompt(
   botMessage: string,
   history: Array<{ role: "user" | "assistant"; content: string }>
 ): string {
-  const personaProfile = typeof persona.profile === "object"
-    ? JSON.stringify(persona.profile, null, 2)
+  const profileObj =
+    typeof persona.profile === "object" && persona.profile !== null
+      ? (persona.profile as Record<string, unknown>)
+      : null;
+
+  // 2026-05-05: persona_sim_prompt_hint (do fixture) é tratado como overlay
+  // de personalidade — vai num bloco dedicado no prompt pra LLM diferenciar
+  // simulação. Resto do profile vai como JSON estruturado pra contexto.
+  const personaSimHint =
+    profileObj && typeof profileObj["persona_sim_prompt_hint"] === "string"
+      ? (profileObj["persona_sim_prompt_hint"] as string).trim()
+      : null;
+
+  const profileForPrompt = profileObj
+    ? Object.fromEntries(
+        Object.entries(profileObj).filter(([k]) => k !== "persona_sim_prompt_hint"),
+      )
+    : null;
+
+  const personaProfile = profileForPrompt
+    ? JSON.stringify(profileForPrompt, null, 2)
     : String(persona.profile);
 
   const historyFormatted = history.length > 0
@@ -63,7 +82,15 @@ id: ${persona.id}
 name: ${persona.name}
 age: ${persona.age}
 profile: ${personaProfile}
-</persona>
+</persona>${
+    personaSimHint
+      ? `
+
+<simulation_overlay>
+${personaSimHint}
+</simulation_overlay>`
+      : ""
+  }
 
 <conversation_history>
 ${historyFormatted}

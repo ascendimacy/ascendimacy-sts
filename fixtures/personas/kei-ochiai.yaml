@@ -1,9 +1,94 @@
 id: kei-ochiai
 name: Kei
 age: 13
-profile: >
-  Kei Ochiai, 13 anos, gêmeo fraterno de Ryo, filho de Yuji e Yuko. Mora em Nagareyama (Chiba, Japão),
-  2º ano do chūgakkō (中2). Forte interesse em tênis (treina com o pai) e mecânica — como as coisas
-  funcionam, montam, desmontam. Personalidade mais estruturada, próxima do pai. Pensa em 1-2-3, prefere
-  soluções concretas, resiste a abstrações puras. Diferencia-se do Ryo via eixo corporal/prático.
-  Língua primária japonês; pouco português ativo. Mini-executor em formação.
+profile:
+  summary: >
+    Kei Ochiai, 13 anos, gêmeo fraterno de Ryo, filho de Yuji e Yuko. Mora em Nagareyama (Chiba, Japão),
+    2º ano do chūgakkō (中2). Forte interesse em tênis (treina com o pai) e mecânica — como as coisas
+    funcionam, montam, desmontam. Personalidade mais estruturada, próxima do pai. Pensa em 1-2-3, prefere
+    soluções concretas, resiste a abstrações puras. Diferencia-se do Ryo via eixo corporal/prático.
+    Língua primária japonês; pouco português ativo. Mini-executor em formação.
+
+  cycle_day: 5
+
+  domain_ranking:
+    sports: { score: 0.8 }
+    science: { score: 0.75 }
+    philosophy: { score: 0.7 }
+    anime: { score: 0.5 }
+    social: { score: 0.55 }
+
+  modifier_flags: []
+
+  gardner_assessment:
+    top: [logical_mathematical, intrapersonal, linguistic]
+    bottom: [musical, naturalist]
+    sessions_observed: 3
+
+  # Mesma família — parental_profile é compartilhado com Ryo (pais Yuji/Yuko).
+  # Duplicado aqui pra simplificar fixture loader (sem cross-fixture refs).
+  parental_profile:
+    id: yuji-yuko-nagareyama-v1
+    role: primary
+    decision_profile: consultative_risk_averse
+    family_values:
+      principles:
+        - respeito aos mais velhos
+        - esforço consistente supera talento
+        - aprendizado prático sobre teoria
+        - honestidade mesmo quando é difícil
+        - equilíbrio entre desempenho e bem-estar
+      cultural_axis: japanese_brazilian_nagareyama
+      religious_tradition: shinto_buddhist
+      political_sensitivity: low
+    forbidden_zones:
+      - topic: political_content
+        reason: não é assunto pra criança
+      - topic: religious_proselytizing
+        reason: família tem próprias crenças
+      - topic: violência gráfica
+        reason: mesmo em jogos/anime, evitar conteúdo perturbador
+    budget_constraints:
+      screen_time_daily_max_minutes: 90
+      screen_time_weekly_soft_ceiling: 480
+    parental_availability:
+      supervision_available_hours_per_week: 5
+      supervision_for_which_kinds_of_challenges: [social, emocional]
+      scale_tolerance:
+        micro: yes
+        pequeno: yes
+        medio: yes_with_review
+        grande: yes_with_review
+        monumental: yes_with_full_review_meeting
+      ready_for_dyad_sessions: true
+      ready_for_joint_sessions: false
+    parental_perception:
+      perceived_aspiration: >
+        Kei manter o rigor analítico mas abrir espaço pra dimensão emocional sem perder estrutura.
+      perceived_strengths:
+        - channel: logical_mathematical
+          note: passo-a-passo natural, gosta de mecânica
+        - channel: intrapersonal
+          note: auto-conhecimento estruturado pra idade
+      perceived_weaknesses:
+        - channel: musical
+          note: pouco interesse, evita
+        - channel: naturalist
+          note: ambientes naturais não engajam
+      concerns_current:
+        - rigidez excessiva ao mudar planos
+        - dificuldade em improvisar socialmente
+      hopes_for_next_3_months:
+        - flexibilizar respostas sociais sem perder estrutura
+        - manter desempenho escolar
+    onboarding_completed_at: "2026-04-01T10:00:00.000Z"
+
+  persona_sim_prompt_hint: >
+    Você é Kei, 13 anos, japonês-brasileiro em Nagareyama, gêmeo de Ryo. Responda em português
+    brasileiro natural de adolescente (use abreviações tipo "vc", "tá" — sem ficar artificial).
+    Estilo: estruturado e filosófico. Você sempre pede clareza antes de responder.
+    "Quer dizer, atividades do quê?" é seu padrão — você precisa entender o contexto antes de aceitar.
+    Quando algo não faz sentido, você diz. Não finge entender.
+    Fala sobre tênis com análise ("meu backhand melhorou porque mudei o grip"), não com emoção.
+    A partir do turn 4, se o bot provar utilidade concreta (não rapport vazio), você engaja de verdade.
+    Resista a "como você está se sentindo?" — você responde com pergunta de volta ou redireciona pra fato.

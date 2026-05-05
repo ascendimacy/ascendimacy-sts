@@ -1,0 +1,71 @@
+# nagareyama-realista-v1 — STS pré-piloto Nagareyama com TODAS as camadas ativas.
+#
+# Spec: ascendimacy-ops/docs/specs/2026-05-05-sts-realista-ryo-kei.md
+#
+# Diferencial do nagareyama-14d-v1:
+#   - mock_llm: false (LLM real local OVMS / Qwen2.5)
+#   - Fixtures Ryo + Kei extendidas (parental_profile + gardner_assessment +
+#     persona_sim_prompt_hint) — distinção de simulação por persona
+#   - Signal Extractor invocado no path STS (motor-client chama extract_signals
+#     antes de plan_turn)
+#   - Mood real do Unified Assessor → Helix advance (substitui proxy trustLevel)
+#   - Parental triage rule_based ativo (parental_profile presente)
+#   - Gardner Program bootstrap idempotente (gardner_program_start no motor-client)
+#   - maxTokens 600 em turn 4+ (constrained-materializer turn-aware)
+#
+# Observações operacionais:
+#   - 3 sessões/persona × 12 turns × 2 personas (Ryo + Kei)
+#   - Schema atual NÃO suporta paralelismo (sessões rodadas sequencialmente)
+#   - Trigger Evaluator continua read-only nesta versão — apply mode é débito
+#     pré-piloto deferido (precisa de extensão schema com from/to dim explícitos).
+
+name: nagareyama-realista-v1
+
+start_date: "2026-05-05T00:00:00Z"
+end_date: "2026-05-09T23:59:59Z"
+
+personas: [ryo-ochiai, kei-ochiai]
+parents: [yuji-ochiai, yuko-ochiai]
+
+mock_llm: false
+state_dir: ".sts/state/nagareyama-realista-v1"
+
+events:
+  # ── Dia 1: Sessão 1 cada persona ─────────────────────────────────────
+  - day: 1
+    type: solo_session
+    persona: ryo-ochiai
+    turns: 12
+    label: ryo_s1_realista
+
+  - day: 1
+    type: solo_session
+    persona: kei-ochiai
+    turns: 12
+    label: kei_s1_realista
+
+  # ── Dia 3: Sessão 2 cada persona ─────────────────────────────────────
+  - day: 3
+    type: solo_session
+    persona: ryo-ochiai
+    turns: 12
+    label: ryo_s2_realista
+
+  - day: 3
+    type: solo_session
+    persona: kei-ochiai
+    turns: 12
+    label: kei_s2_realista
+
+  # ── Dia 5: Sessão 3 cada persona ─────────────────────────────────────
+  - day: 5
+    type: solo_session
+    persona: ryo-ochiai
+    turns: 12
+    label: ryo_s3_realista
+
+  - day: 5
+    type: solo_session
+    persona: kei-ochiai
+    turns: 12
+    label: kei_s3_realista

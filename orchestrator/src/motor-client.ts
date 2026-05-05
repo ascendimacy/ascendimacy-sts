@@ -41,6 +41,7 @@ function buildEnv(): Record<string, string> {
     "ASC_DEBUG_MODE",
     "ASC_DEBUG_RUN_ID",
     "ASC_DEBUG_DIR",
+    "ASC_DEBUG_MATERIALIZER",
     // sts#13 router env keys (motor#21) — override per-callsite no motor side
     "LLM_PROVIDER",
     "PLANEJADOR_PROVIDER",
@@ -237,11 +238,27 @@ function fixedMockResult(turnNumber: number): MotorTurnResult {
  * para delegação direta está documentado como follow-up sts v0.5+ (ver
  * docs/handoffs/INBOX.md débito sts#8 → b).
  */
+/**
+ * Tamanho da janela de history que o motor recebe pra context awareness.
+ * Default 6 = últimos 3 pares user/assistant (user msg + bot reply × 3).
+ * Suficiente pra detectar loops + drift sem inflar prompt.
+ * Override via STS_MOTOR_HISTORY_TAIL.
+ */
+const MOTOR_HISTORY_TAIL = (() => {
+  const v = process.env["STS_MOTOR_HISTORY_TAIL"];
+  if (v) {
+    const n = Number.parseInt(v, 10);
+    if (!Number.isNaN(n) && n > 0) return n;
+  }
+  return 6;
+})();
+
 export async function runMotorTurn(
   sessionId: string,
   personaMessage: string,
   turnNumber: number,
-  personaId: string = "paula-mendes"
+  personaId: string = "paula-mendes",
+  history: Array<{ role: "user" | "assistant"; content: string }> = [],
 ): Promise<MotorTurnResult> {
   const clients = await tryGetMotorClients();
   if (!clients) return fixedMockResult(turnNumber);
@@ -271,10 +288,69 @@ export async function runMotorTurn(
     // Fail-soft: helix indisponível → planejador faz fallback statusMatrix
   }
 
+  // 2026-05-05 (sts-realista §2.4): bootstrap Gardner Program idempotente.
+  // gardner_program_start tem early-return se current_week !== null. Sem isso,
+  // state.gardnerProgram fica com current_week=null e plan.ts retorna
+  // active=false — Program nunca dispara nem com sessions_observed=3 na fixture.
+  try {
+    await motorExecucao.callTool(
+      { name: "gardner_program_start", arguments: { sessionId } },
+      undefined,
+      { timeout: MCP_REQUEST_TIMEOUT },
+    );
+  } catch {
+    // Fail-soft: ausência de Gardner Program apenas desativa o programa, turn segue.
+  }
+
+  // 2026-05-05 (sts-realista §2.1): chamar extract_signals ANTES do planejador,
+  // pra signals semânticos chegarem ao pool ranker via contextHints. Sem isso,
+  // signals só são extraídos dentro do drota (pelo Unified Assessor) — tarde
+  // demais pra influenciar o pool. Fail-soft: signals=[] se extractor falhar.
+  //
+  // recentTurns: usa history vindo do orchestrator (último N pares user/bot).
+  // Motor é semi-stateless: estado estratégico (helix, status, gardner) vem do
+  // sqlite; janela curta de texto vem aqui pra evitar loop sem inflar prompt.
+  const stateWithRecent = state as { trustLevel?: number };
+  const recentTurns = history.slice(-MOTOR_HISTORY_TAIL);
+  let extractedSignals: string[] = [];
+  try {
+    const signalsResult = await motorDrota.callTool(
+      {
+        name: "extract_signals",
+        arguments: {
+          userMessage: personaMessage,
+          personaName: persona.name,
+          personaAge: persona.age,
+          trustLevel: stateWithRecent.trustLevel ?? 0.3,
+          conversationHistoryTail: recentTurns,
+        },
+      },
+      undefined,
+      { timeout: MCP_REQUEST_TIMEOUT },
+    );
+    const parsed = parseToolText<{ signals?: string[] }>(signalsResult);
+    extractedSignals = Array.isArray(parsed.signals) ? parsed.signals : [];
+  } catch {
+    // Fail-soft: planejador segue com signals vazios.
+  }
+
   const planResult = await planejador.callTool(
     {
       name: "plan_turn",
-      arguments: { sessionId, persona, adquirente, inventory, state, incomingMessage: personaMessage, helixState },
+      arguments: {
+        sessionId,
+        persona,
+        adquirente,
+        inventory,
+        state,
+        incomingMessage: personaMessage,
+        helixState,
+        contextHints: {
+          extracted_signals: extractedSignals,
+          last_user_message: personaMessage,
+          recent_turns: recentTurns,
+        },
+      },
     },
     undefined,
     { timeout: MCP_REQUEST_TIMEOUT },
@@ -316,6 +392,15 @@ export async function runMotorTurn(
     };
     linguisticMaterialization: string;
     selectionRationale?: string;
+    // 2026-05-05 (sts-realista §2.2): assessment exposto pelo simplified pipeline.
+    assessment?: {
+      mood: number;
+      mood_confidence: "high" | "medium" | "low";
+      mood_method: "rule" | "llm" | "fallback";
+      signals: string[];
+      engagement: "low" | "medium" | "high";
+      rationale: string;
+    };
   }>(drotaResult);
   const lm = drota.linguisticMaterialization;
   if (typeof lm === "string") {
@@ -486,15 +571,19 @@ export async function runMotorTurn(
   });
 
   // motor#H5: Helix advance no fim do turn (via MCP tool advance_helix).
-  // Heurística MVP — delta proxy via trustLevel growth, mood proxy via trustLevel absoluto.
+  // 2026-05-05 (sts-realista §2.2): mood real do Unified Assessor quando
+  // disponível (simplified pipeline). Fallback proxy trustLevel quando
+  // assessment ausente (pipeline antigo ou erro).
   if (helixState && !(helixState as { vacationModeActive?: boolean }).vacationModeActive) {
     const prevTrust = (state.trustLevel as number | undefined) ?? 0.3;
     const trustDelta = trustLevel - prevTrust;
     const delta = trustDelta > 0.02 ? 0.10 : trustDelta > 0 ? 0.05 : 0;
-    const moodProxy = trustLevel >= 0.4 ? 8 : 2;
+    const moodReal = drota.assessment?.mood;
+    const moodFinal =
+      typeof moodReal === "number" ? moodReal : trustLevel >= 0.4 ? 8 : 2;
     try {
       await motorExecucao.callTool(
-        { name: "advance_helix", arguments: { childId: persona.id, delta, mood: moodProxy } },
+        { name: "advance_helix", arguments: { childId: persona.id, delta, mood: moodFinal } },
         undefined,
         { timeout: MCP_REQUEST_TIMEOUT },
       );

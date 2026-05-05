@@ -1,8 +1,13 @@
+/**
+ * profile pode ser string (legado: prosa única) ou objeto com campos
+ * estruturados (parental_profile, gardner_assessment, persona_sim_prompt_hint,
+ * summary, etc.). Loaders + consumers tratam ambos.
+ */
 export interface PersonaDef {
   id: string;
   name: string;
   age: number;
-  profile: string;
+  profile: string | Record<string, unknown>;
 }
 
 export interface Message {

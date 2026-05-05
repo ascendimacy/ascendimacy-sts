@@ -1,0 +1,27 @@
+# nagareyama-realista-smoke — fast validation do scenario realista.
+# 1 sessão × 4 turns × 2 personas = 8 turns (smoke completo).
+# Usado pra verificar wiring antes do scenario completo (3×12×2 = 72 turns).
+
+name: nagareyama-realista-smoke
+
+start_date: "2026-05-05T00:00:00Z"
+end_date: "2026-05-05T23:59:59Z"
+
+personas: [ryo-ochiai, kei-ochiai]
+parents: [yuji-ochiai, yuko-ochiai]
+
+mock_llm: false
+state_dir: ".sts/state/nagareyama-realista-smoke"
+
+events:
+  - day: 1
+    type: solo_session
+    persona: ryo-ochiai
+    turns: 4
+    label: ryo_smoke
+
+  - day: 1
+    type: solo_session
+    persona: kei-ochiai
+    turns: 4
+    label: kei_smoke

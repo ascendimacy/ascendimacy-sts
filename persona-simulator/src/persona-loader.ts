@@ -11,7 +11,7 @@ interface RawPersona {
   pessoal_id?: string;
   name?: string;
   age?: number;
-  profile?: string;
+  profile?: string | Record<string, unknown>;
   prior?: { demographic_markers?: { name?: string; age?: number } };
   description?: string;
 }
@@ -26,7 +26,7 @@ function extractPersonaDef(raw: RawPersona, filename: string): PersonaDef {
     raw.age ??
     raw.prior?.demographic_markers?.age ??
     0;
-  const profile =
+  const profile: string | Record<string, unknown> =
     raw.profile ??
     (typeof raw.description === "string" ? raw.description.split("\n")[0]!.trim() : id);
 

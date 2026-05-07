@@ -31,22 +31,36 @@ export type LlmStep = (typeof LLM_STEPS)[number];
 
 /**
  * Default provider por step.
- * motor#21: TUDO Infomaniak por default — zero Anthropic dependency.
+ * 2026-05-07: TUDO local por default (Qwen3-30B-A3B via llama.cpp SYCL).
+ * Override per-step via env <STEP>_PROVIDER ou global LLM_PROVIDER.
+ * motor#21 (legado): era infomaniak por default; mudou pra local após
+ * stack llama.cpp validada com qualidade adequada e custo zero.
  */
 export const DEFAULT_PROVIDERS: Record<LlmStep, LlmProvider> = {
-  planejador: "infomaniak",
-  drota: "infomaniak",
-  "persona-sim": "infomaniak",
-  "haiku-triage": "infomaniak",
-  "haiku-bullying": "infomaniak",
+  planejador: "local",
+  drota: "local",
+  "persona-sim": "local",
+  "haiku-triage": "local",
+  "haiku-bullying": "local",
 };
 
 /**
- * Default model por step.
- * Reasoning models (Kimi K2.5) pra steps onde reasoning ajuda.
- * mistral3 (Mistral-Small-3.2-24B) pra triage/bullying — small, fast, deterministic.
+ * Default model por step (provider-agnóstico).
+ * Para provider=local, llama.cpp aceita qualquer alias (single-model server),
+ * então o nome aqui é informativo. Para infomaniak, usar modelo real.
  */
 export const DEFAULT_MODELS: Record<LlmStep, string> = {
+  planejador: "qwen3-30b",
+  drota: "qwen3-30b",
+  "persona-sim": "qwen3-30b",
+  "haiku-triage": "qwen3-30b",
+  "haiku-bullying": "qwen3-30b",
+};
+
+/**
+ * Infomaniak fallback (usado se provider=infomaniak e <STEP>_MODEL ausente).
+ */
+export const INFOMANIAK_FALLBACK_MODELS: Record<LlmStep, string> = {
   planejador: "moonshotai/Kimi-K2.5",
   drota: "moonshotai/Kimi-K2.5",
   "persona-sim": "moonshotai/Kimi-K2.5",
@@ -112,7 +126,11 @@ export function getModelForStep(step: string, provider?: LlmProvider): string {
   if (p === "anthropic") {
     return ANTHROPIC_FALLBACK_MODELS[step as LlmStep] ?? "claude-sonnet-4-6";
   }
-  return DEFAULT_MODELS[step as LlmStep] ?? "moonshotai/Kimi-K2.5";
+  if (p === "infomaniak") {
+    return INFOMANIAK_FALLBACK_MODELS[step as LlmStep] ?? "moonshotai/Kimi-K2.5";
+  }
+  // local (default) ou outros — modelo informativo (llama-server aceita qualquer alias)
+  return DEFAULT_MODELS[step as LlmStep] ?? "qwen3-30b";
 }
 
 /**

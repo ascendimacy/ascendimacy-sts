@@ -67,6 +67,11 @@ function buildEnv(): Record<string, string> {
     "LOCAL_LLM_BASE_URL",
     "LOCAL_LLM_MODEL",
     "LOCAL_LLM_API_KEY",
+    "LOCAL_LLM_FREQUENCY_PENALTY",
+    "LOCAL_LLM_PRESENCE_PENALTY",
+    "LOCAL_LLM_MAX_RETRIES",
+    "LOCAL_LLM_RETRY_BASE_MS",
+    "LOCAL_LLM_THINKING",
     // Pipeline simplification flag (motor-simplificacao-v1 Step 5)
     "USE_SIMPLIFIED_PIPELINE",
     // Step-specific provider/model overrides — granular routing
@@ -78,6 +83,13 @@ function buildEnv(): Record<string, string> {
     "UNIFIED_ASSESSOR_MODEL",
     "SIGNAL_EXTRACTOR_PROVIDER",
     "SIGNAL_EXTRACTOR_MODEL",
+    // 2026-05-07 Phase 2 memory (#476) — profile injection + in-session compression.
+    "PROFILES_DIR",
+    "DISABLE_PROFILE_INJECTION",
+    "PROFILE_COMPRESS_EVERY",
+    "EXTRACTOR_BASE_URL",
+    "EXTRACTOR_MODEL",
+    "EXTRACTOR_API_KEY",
   ];
   for (const k of keys) {
     const v = process.env[k];

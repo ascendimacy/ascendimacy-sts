@@ -1,0 +1,37 @@
+# phase2-overnight-day5 — overnight reduzido reproveitando profiles cumulados.
+# Roda apenas as sessões finais (Day 5 do original nagareyama-realista-v1):
+#   - 1 sessão ryo-ochiai (12 turns)
+#   - 1 sessão kei-ochiai (12 turns)
+# Total: 24 turns + ~4 compressões (2 por sessão @ turn 6) = ~75 min.
+#
+# Profiles seed: fixtures/profiles/{ryo|kei}-ochiai.json já contém 3 sessões
+# extraídas do batch desta tarde (= "estado após days 1 e 3").
+#
+# Mudanças vs realista-v1:
+#   - state_dir distinto pra evitar resume parcial
+#   - só Day 5 events
+#   - dependências (yuji/yuko) iguais
+
+name: phase2-overnight-day5
+
+start_date: "2026-05-09T00:00:00Z"
+end_date: "2026-05-09T23:59:59Z"
+
+personas: [ryo-ochiai, kei-ochiai]
+parents: [yuji-ochiai, yuko-ochiai]
+
+mock_llm: false
+state_dir: ".sts/state/phase2-overnight-day5"
+
+events:
+  - day: 1
+    type: solo_session
+    persona: ryo-ochiai
+    turns: 12
+    label: ryo_s3_realista_phase2
+
+  - day: 1
+    type: solo_session
+    persona: kei-ochiai
+    turns: 12
+    label: kei_s3_realista_phase2

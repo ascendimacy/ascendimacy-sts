@@ -1,0 +1,21 @@
+# phase2-smoke-ryo-12 — valida Phase 2 memory architecture (#476).
+# 1 sessão × 12 turns × ryo. Triggers: profile injection (turn 0+), compression (turn 6 + 12).
+# Usado tonight 2026-05-07 antes do overnight realista-v1 com profile.
+
+name: phase2-smoke-ryo-12
+
+start_date: "2026-05-07T22:00:00Z"
+end_date: "2026-05-07T23:59:59Z"
+
+personas: [ryo-ochiai]
+parents: [yuji-ochiai, yuko-ochiai]
+
+mock_llm: false
+state_dir: ".sts/state/phase2-smoke-ryo-12"
+
+events:
+  - day: 1
+    type: solo_session
+    persona: ryo-ochiai
+    turns: 12
+    label: ryo_phase2_smoke

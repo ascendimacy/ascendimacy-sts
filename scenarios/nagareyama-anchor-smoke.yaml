@@ -1,0 +1,23 @@
+# nagareyama-anchor-smoke — validação do bugfix-materializer-content-anchor.
+# 1 sessão × 8 turns Ryo. Verifica:
+#   - Fact selecionado aparece no output do bot (≥6/8 turns)
+#   - Após deflection_thematic, bot muda de tema no turn seguinte
+#   - Sem FALLBACK: inesperado
+
+name: nagareyama-anchor-smoke
+
+start_date: "2026-05-05T00:00:00Z"
+end_date: "2026-05-05T23:59:59Z"
+
+personas: [ryo-ochiai]
+parents: [yuji-ochiai]
+
+mock_llm: false
+state_dir: ".sts/state/nagareyama-anchor-smoke"
+
+events:
+  - day: 1
+    type: solo_session
+    persona: ryo-ochiai
+    turns: 8
+    label: ryo_anchor_smoke

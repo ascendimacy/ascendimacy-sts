@@ -46,8 +46,27 @@ function buildSystemPrompt(
   botMessage: string,
   history: Array<{ role: "user" | "assistant"; content: string }>
 ): string {
-  const personaProfile = typeof persona.profile === "object"
-    ? JSON.stringify(persona.profile, null, 2)
+  const profileObj =
+    typeof persona.profile === "object" && persona.profile !== null
+      ? (persona.profile as Record<string, unknown>)
+      : null;
+
+  // 2026-05-05: persona_sim_prompt_hint (do fixture) é tratado como overlay
+  // de personalidade — vai num bloco dedicado no prompt pra LLM diferenciar
+  // simulação. Resto do profile vai como JSON estruturado pra contexto.
+  const personaSimHint =
+    profileObj && typeof profileObj["persona_sim_prompt_hint"] === "string"
+      ? (profileObj["persona_sim_prompt_hint"] as string).trim()
+      : null;
+
+  const profileForPrompt = profileObj
+    ? Object.fromEntries(
+        Object.entries(profileObj).filter(([k]) => k !== "persona_sim_prompt_hint"),
+      )
+    : null;
+
+  const personaProfile = profileForPrompt
+    ? JSON.stringify(profileForPrompt, null, 2)
     : String(persona.profile);
 
   const historyFormatted = history.length > 0
@@ -63,7 +82,15 @@ id: ${persona.id}
 name: ${persona.name}
 age: ${persona.age}
 profile: ${personaProfile}
-</persona>
+</persona>${
+    personaSimHint
+      ? `
+
+<simulation_overlay>
+${personaSimHint}
+</simulation_overlay>`
+      : ""
+  }
 
 <conversation_history>
 ${historyFormatted}
@@ -124,16 +151,52 @@ Lembre-se:
 - JSON schema obrigatório: {"message": string, "endConversation": boolean, "metadata": {"mood": string}}.`;
 }
 
+/**
+ * Extrai o PRIMEIRO objeto JSON balanceado a partir de uma string.
+ * Tolerante a texto antes/depois (Qwen3-8B às vezes emite explicação extra).
+ * Respeita aspas escapadas dentro de strings JSON.
+ * Retorna null se nenhum objeto fechado é encontrado.
+ */
+function extractFirstBalancedJsonObject(input: string): string | null {
+  const start = input.indexOf("{");
+  if (start < 0) return null;
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+  for (let i = start; i < input.length; i++) {
+    const ch = input[i];
+    if (escape) {
+      escape = false;
+      continue;
+    }
+    if (ch === "\\") {
+      if (inString) escape = true;
+      continue;
+    }
+    if (ch === '"') {
+      inString = !inString;
+      continue;
+    }
+    if (inString) continue;
+    if (ch === "{") depth++;
+    else if (ch === "}") {
+      depth--;
+      if (depth === 0) return input.slice(start, i + 1);
+    }
+  }
+  return null;
+}
+
 function parsePersonaResponse(raw: string): PersonaNextMessageOutput {
   let cleaned = raw.trim();
   if (cleaned.startsWith("```")) {
     cleaned = cleaned.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
   }
-  const firstBrace = cleaned.indexOf("{");
-  const lastBrace = cleaned.lastIndexOf("}");
-  if (firstBrace >= 0 && lastBrace > firstBrace) {
-    cleaned = cleaned.slice(firstBrace, lastBrace + 1);
-  }
+  // 2026-05-05: extrai PRIMEIRO objeto JSON balanceado pra tolerar
+  // modelos (Qwen3-8B em particular) que emitem texto extra após o objeto.
+  // Antes: firstBrace..lastBrace slice falhava se modelo emitisse 2+ objetos.
+  const balanced = extractFirstBalancedJsonObject(cleaned);
+  if (balanced) cleaned = balanced;
   const parsed = JSON.parse(cleaned) as {
     message?: string;
     endConversation?: boolean;
@@ -216,6 +279,51 @@ async function callAnthropicPersona(
   return { textContent, reasoning, tokens: { in: usage.input_tokens, out: usage.output_tokens }, latency_ms };
 }
 
+async function callLocalPersona(
+  systemPrompt: string,
+  step: string,
+): Promise<{ textContent: string; reasoning?: string; tokens: { in: number; out: number }; latency_ms: number }> {
+  const baseURL = process.env["LOCAL_LLM_BASE_URL"] ?? "http://localhost:8000/v1";
+  const model = process.env["LOCAL_LLM_MODEL"] ?? "qwen2.5";
+  const apiKey = process.env["LOCAL_LLM_API_KEY"] ?? "local";
+
+  const { default: OpenAI } = await import("openai");
+  const client = new OpenAI({ apiKey, baseURL });
+  const { getLlmTimeoutMs, getLlmMaxRetries, getMaxTokensForStep } = await import("@ascendimacy/sts-shared");
+  const maxTokens = getMaxTokensForStep(step, model);
+
+  const t0 = Date.now();
+  // 2026-05-05: Qwen3 hybrid thinking off por default (override via LOCAL_LLM_THINKING=true).
+  // OpenAI SDK não tipa chat_template_kwargs — passa via cast.
+  const response = await client.chat.completions.create({
+    model,
+    messages: [{ role: "user", content: systemPrompt }],
+    max_tokens: maxTokens,
+    temperature: 0.9,
+    seed: Math.floor(Math.random() * 2 ** 31),
+    // @ts-expect-error - chat_template_kwargs não está no schema OpenAI mas
+    // OVMS / vLLM aceitam pra controle de Qwen3 thinking mode
+    chat_template_kwargs: {
+      enable_thinking:
+        process.env["LOCAL_LLM_THINKING"] === "true" ? true : false,
+    },
+  }, {
+    timeout: getLlmTimeoutMs(step),
+    maxRetries: getLlmMaxRetries(step),
+  });
+  const latency_ms = Date.now() - t0;
+  const msg = response.choices[0]?.message;
+  const textContent = msg?.content ?? "";
+  if (!textContent) throw new Error("Unexpected response: no content from persona LLM (local)");
+  const usage = response.usage;
+  return {
+    textContent,
+    reasoning: undefined,
+    tokens: { in: usage?.prompt_tokens ?? 0, out: usage?.completion_tokens ?? 0 },
+    latency_ms,
+  };
+}
+
 async function callInfomaniakPersona(
   systemPrompt: string,
   step: string,
@@ -279,7 +387,9 @@ export async function getPersonaNextMessage(
 
   const callResult = provider === "anthropic"
     ? await callAnthropicPersona(systemPrompt, "persona-sim", debugMode)
-    : await callInfomaniakPersona(systemPrompt, "persona-sim");
+    : provider === "local"
+      ? await callLocalPersona(systemPrompt, "persona-sim")
+      : await callInfomaniakPersona(systemPrompt, "persona-sim");
 
   const { textContent, reasoning, tokens, latency_ms } = callResult;
   const parsed = parsePersonaResponse(textContent);

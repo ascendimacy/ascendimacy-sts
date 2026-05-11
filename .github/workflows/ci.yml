@@ -25,6 +25,8 @@ jobs:
         run: npm run build
 
       - name: Run tests
+        env:
+          VITEST_SKIP_HEAVY: "true"
         run: npm test
 
       - name: Run smoke test

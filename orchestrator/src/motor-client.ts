@@ -9,6 +9,20 @@ import { logDebugEvent } from "@ascendimacy/sts-shared";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+/**
+ * Timeout pra cada chamada MCP em ms.
+ *
+ * Default MCP SDK é 60s — insuficiente pra pipeline real-llm que pode
+ * encadear 2-4 chamadas LLM (Sonnet planejador + Kimi drota + Haiku
+ * triage etc.). Default aqui é 180s; override via STS_MCP_TIMEOUT_MS.
+ *
+ * Pra debugar timeouts, subir pra 300000 (5 min). Pra forçar fail-fast
+ * em smoke determinístico, descer pra 30000.
+ */
+const MCP_REQUEST_TIMEOUT = Number(
+  process.env["STS_MCP_TIMEOUT_MS"] ?? "180000",
+);
+
 function buildEnv(): Record<string, string> {
   const env: Record<string, string> = {};
   const keys = [
@@ -27,6 +41,7 @@ function buildEnv(): Record<string, string> {
     "ASC_DEBUG_MODE",
     "ASC_DEBUG_RUN_ID",
     "ASC_DEBUG_DIR",
+    "ASC_DEBUG_MATERIALIZER",
     // sts#13 router env keys (motor#21) — override per-callsite no motor side
     "LLM_PROVIDER",
     "PLANEJADOR_PROVIDER",
@@ -48,6 +63,33 @@ function buildEnv(): Record<string, string> {
     "ASC_LLM_MAX_RETRIES_DROTA",
     "ASC_LLM_MAX_RETRIES",
     "LLM_THINKING_BUDGET_TOKENS",
+    // Local provider (vLLM / llama-server) — motor-simplificacao-v1
+    "LOCAL_LLM_BASE_URL",
+    "LOCAL_LLM_MODEL",
+    "LOCAL_LLM_API_KEY",
+    "LOCAL_LLM_FREQUENCY_PENALTY",
+    "LOCAL_LLM_PRESENCE_PENALTY",
+    "LOCAL_LLM_MAX_RETRIES",
+    "LOCAL_LLM_RETRY_BASE_MS",
+    "LOCAL_LLM_THINKING",
+    // Pipeline simplification flag (motor-simplificacao-v1 Step 5)
+    "USE_SIMPLIFIED_PIPELINE",
+    // Step-specific provider/model overrides — granular routing
+    "PERSONA_SIM_PROVIDER",
+    "PERSONA_SIM_MODEL",
+    "MOOD_EXTRACTOR_PROVIDER",
+    "MOOD_EXTRACTOR_MODEL",
+    "UNIFIED_ASSESSOR_PROVIDER",
+    "UNIFIED_ASSESSOR_MODEL",
+    "SIGNAL_EXTRACTOR_PROVIDER",
+    "SIGNAL_EXTRACTOR_MODEL",
+    // 2026-05-07 Phase 2 memory (#476) — profile injection + in-session compression.
+    "PROFILES_DIR",
+    "DISABLE_PROFILE_INJECTION",
+    "PROFILE_COMPRESS_EVERY",
+    "EXTRACTOR_BASE_URL",
+    "EXTRACTOR_MODEL",
+    "EXTRACTOR_API_KEY",
   ];
   for (const k of keys) {
     const v = process.env[k];
@@ -208,11 +250,27 @@ function fixedMockResult(turnNumber: number): MotorTurnResult {
  * para delegação direta está documentado como follow-up sts v0.5+ (ver
  * docs/handoffs/INBOX.md débito sts#8 → b).
  */
+/**
+ * Tamanho da janela de history que o motor recebe pra context awareness.
+ * Default 6 = últimos 3 pares user/assistant (user msg + bot reply × 3).
+ * Suficiente pra detectar loops + drift sem inflar prompt.
+ * Override via STS_MOTOR_HISTORY_TAIL.
+ */
+const MOTOR_HISTORY_TAIL = (() => {
+  const v = process.env["STS_MOTOR_HISTORY_TAIL"];
+  if (v) {
+    const n = Number.parseInt(v, 10);
+    if (!Number.isNaN(n) && n > 0) return n;
+  }
+  return 6;
+})();
+
 export async function runMotorTurn(
   sessionId: string,
   personaMessage: string,
   turnNumber: number,
-  personaId: string = "paula-mendes"
+  personaId: string = "paula-mendes",
+  history: Array<{ role: "user" | "assistant"; content: string }> = [],
 ): Promise<MotorTurnResult> {
   const clients = await tryGetMotorClients();
   if (!clients) return fixedMockResult(turnNumber);
@@ -221,13 +279,94 @@ export async function runMotorTurn(
   const { persona, adquirente, inventory } = loadMotorFixtures(motorPath, personaId);
   const { planejador, motorDrota, motorExecucao } = clients;
 
-  const stateResult = await motorExecucao.callTool({ name: "get_state", arguments: { sessionId } });
+  const stateResult = await motorExecucao.callTool(
+    { name: "get_state", arguments: { sessionId } },
+    undefined,
+    { timeout: MCP_REQUEST_TIMEOUT },
+  );
   const state = parseToolText<Record<string, unknown>>(stateResult);
 
-  const planResult = await planejador.callTool({
-    name: "plan_turn",
-    arguments: { sessionId, persona, adquirente, inventory, state, incomingMessage: personaMessage },
-  });
+  // motor#H5: load + lazy bootstrap Helix via MCP tool init_helix (idempotente).
+  let helixState: Record<string, unknown> | null = null;
+  try {
+    const initResult = await motorExecucao.callTool(
+      { name: "init_helix", arguments: { childId: persona.id } },
+      undefined,
+      { timeout: MCP_REQUEST_TIMEOUT },
+    );
+    const parsedInit = parseToolText<{ state: Record<string, unknown>; bootstrapped: boolean }>(initResult);
+    helixState = parsedInit.state;
+  } catch {
+    // Fail-soft: helix indisponível → planejador faz fallback statusMatrix
+  }
+
+  // 2026-05-05 (sts-realista §2.4): bootstrap Gardner Program idempotente.
+  // gardner_program_start tem early-return se current_week !== null. Sem isso,
+  // state.gardnerProgram fica com current_week=null e plan.ts retorna
+  // active=false — Program nunca dispara nem com sessions_observed=3 na fixture.
+  try {
+    await motorExecucao.callTool(
+      { name: "gardner_program_start", arguments: { sessionId } },
+      undefined,
+      { timeout: MCP_REQUEST_TIMEOUT },
+    );
+  } catch {
+    // Fail-soft: ausência de Gardner Program apenas desativa o programa, turn segue.
+  }
+
+  // 2026-05-05 (sts-realista §2.1): chamar extract_signals ANTES do planejador,
+  // pra signals semânticos chegarem ao pool ranker via contextHints. Sem isso,
+  // signals só são extraídos dentro do drota (pelo Unified Assessor) — tarde
+  // demais pra influenciar o pool. Fail-soft: signals=[] se extractor falhar.
+  //
+  // recentTurns: usa history vindo do orchestrator (último N pares user/bot).
+  // Motor é semi-stateless: estado estratégico (helix, status, gardner) vem do
+  // sqlite; janela curta de texto vem aqui pra evitar loop sem inflar prompt.
+  const stateWithRecent = state as { trustLevel?: number };
+  const recentTurns = history.slice(-MOTOR_HISTORY_TAIL);
+  let extractedSignals: string[] = [];
+  try {
+    const signalsResult = await motorDrota.callTool(
+      {
+        name: "extract_signals",
+        arguments: {
+          userMessage: personaMessage,
+          personaName: persona.name,
+          personaAge: persona.age,
+          trustLevel: stateWithRecent.trustLevel ?? 0.3,
+          conversationHistoryTail: recentTurns,
+        },
+      },
+      undefined,
+      { timeout: MCP_REQUEST_TIMEOUT },
+    );
+    const parsed = parseToolText<{ signals?: string[] }>(signalsResult);
+    extractedSignals = Array.isArray(parsed.signals) ? parsed.signals : [];
+  } catch {
+    // Fail-soft: planejador segue com signals vazios.
+  }
+
+  const planResult = await planejador.callTool(
+    {
+      name: "plan_turn",
+      arguments: {
+        sessionId,
+        persona,
+        adquirente,
+        inventory,
+        state,
+        incomingMessage: personaMessage,
+        helixState,
+        contextHints: {
+          extracted_signals: extractedSignals,
+          last_user_message: personaMessage,
+          recent_turns: recentTurns,
+        },
+      },
+    },
+    undefined,
+    { timeout: MCP_REQUEST_TIMEOUT },
+  );
   const plan = parseToolText<{
     contentPool?: unknown[];
     strategicRationale?: string;
@@ -235,18 +374,22 @@ export async function runMotorTurn(
     instruction_addition?: string;
   }>(planResult);
 
-  const drotaResult = await motorDrota.callTool({
-    name: "evaluate_and_select",
-    arguments: {
-      sessionId,
-      contentPool: plan.contentPool ?? [],
-      state,
-      persona,
-      strategicRationale: plan.strategicRationale ?? "",
-      contextHints: plan.contextHints ?? {},
-      instruction_addition: plan.instruction_addition ?? "",
+  const drotaResult = await motorDrota.callTool(
+    {
+      name: "evaluate_and_select",
+      arguments: {
+        sessionId,
+        contentPool: plan.contentPool ?? [],
+        state,
+        persona,
+        strategicRationale: plan.strategicRationale ?? "",
+        contextHints: plan.contextHints ?? {},
+        instruction_addition: plan.instruction_addition ?? "",
+      },
     },
-  });
+    undefined,
+    { timeout: MCP_REQUEST_TIMEOUT },
+  );
   let drota = parseToolText<{
     selectedContent?: {
       item?: {
@@ -261,6 +404,15 @@ export async function runMotorTurn(
     };
     linguisticMaterialization: string;
     selectionRationale?: string;
+    // 2026-05-05 (sts-realista §2.2): assessment exposto pelo simplified pipeline.
+    assessment?: {
+      mood: number;
+      mood_confidence: "high" | "medium" | "low";
+      mood_method: "rule" | "llm" | "fallback";
+      signals: string[];
+      engagement: "low" | "medium" | "high";
+      rationale: string;
+    };
   }>(drotaResult);
   const lm = drota.linguisticMaterialization;
   if (typeof lm === "string") {
@@ -277,16 +429,20 @@ export async function runMotorTurn(
   const deployProfileId = (inventory[0] as { id?: string } | undefined)?.id ?? "default";
   const selectedContentId = drota.selectedContent?.item?.id ?? "";
 
-  const execResult = await motorExecucao.callTool({
-    name: "execute_playbook",
-    arguments: {
-      sessionId,
-      playbookId: deployProfileId,
-      selectedContentId,
-      output: drota.linguisticMaterialization,
-      metadata: {},
+  const execResult = await motorExecucao.callTool(
+    {
+      name: "execute_playbook",
+      arguments: {
+        sessionId,
+        playbookId: deployProfileId,
+        selectedContentId,
+        output: drota.linguisticMaterialization,
+        metadata: {},
+      },
     },
-  });
+    undefined,
+    { timeout: MCP_REQUEST_TIMEOUT },
+  );
   const exec = parseToolText<{
     newState?: { trustLevel?: number; budgetRemaining?: number };
     trustLevel?: number;
@@ -305,10 +461,14 @@ export async function runMotorTurn(
       : undefined;
   let currentStatusMatrix = (state as { statusMatrix?: Record<string, string> }).statusMatrix;
   try {
-    const newStateResult = await motorExecucao.callTool({
-      name: "get_state",
-      arguments: { sessionId },
-    });
+    const newStateResult = await motorExecucao.callTool(
+      {
+        name: "get_state",
+        arguments: { sessionId },
+      },
+      undefined,
+      { timeout: MCP_REQUEST_TIMEOUT },
+    );
     const newState = parseToolText<{ statusMatrix?: Record<string, string> }>(newStateResult);
     currentStatusMatrix = newState.statusMatrix ?? currentStatusMatrix;
   } catch {
@@ -329,32 +489,40 @@ export async function runMotorTurn(
     const caselTouched = selectedItem?.casel_target ?? [];
     // sts#9 — sacrifice_amount vem do item (motor#18 enriqueceu seed.json)
     const sacrificeSpent = Number(selectedItem?.sacrifice_amount ?? 0);
-    const detectResult = await motorExecucao.callTool({
-      name: "detect_achievement",
-      arguments: {
-        childId: persona.id,
-        sessionId,
-        currentMatrix: currentStatusMatrix ?? {},
-        previousMatrix: prevStatusMatrix ?? {},
-        gardnerObserved,
-        caselTouched,
-        sacrificeSpent,
-        selectedContent: drota.selectedContent ?? {},
+    const detectResult = await motorExecucao.callTool(
+      {
+        name: "detect_achievement",
+        arguments: {
+          childId: persona.id,
+          sessionId,
+          currentMatrix: currentStatusMatrix ?? {},
+          previousMatrix: prevStatusMatrix ?? {},
+          gardnerObserved,
+          caselTouched,
+          sacrificeSpent,
+          selectedContent: drota.selectedContent ?? {},
+        },
       },
-    });
+      undefined,
+      { timeout: MCP_REQUEST_TIMEOUT },
+    );
     const signal = parseToolText<unknown>(detectResult);
     if (signal && typeof signal === "object" && (signal as { kind?: unknown }).kind) {
       signalKind = String((signal as { kind?: unknown }).kind);
       const personaProfile = (persona.profile ?? {}) as Record<string, unknown>;
       const parentalProfile = personaProfile["parental_profile"];
-      const emitResult = await motorExecucao.callTool({
-        name: "emit_card_for_signal",
-        arguments: {
-          signal,
-          childName: persona.name,
-          parentalProfile: parentalProfile && typeof parentalProfile === "object" ? parentalProfile : undefined,
+      const emitResult = await motorExecucao.callTool(
+        {
+          name: "emit_card_for_signal",
+          arguments: {
+            signal,
+            childName: persona.name,
+            parentalProfile: parentalProfile && typeof parentalProfile === "object" ? parentalProfile : undefined,
+          },
         },
-      });
+        undefined,
+        { timeout: MCP_REQUEST_TIMEOUT },
+      );
       const emitOutput = parseToolText<{
         ok?: boolean;
         card_id?: string;
@@ -413,6 +581,28 @@ export async function runMotorTurn(
       ? cardEmissionSkipReason
       : null,
   });
+
+  // motor#H5: Helix advance no fim do turn (via MCP tool advance_helix).
+  // 2026-05-05 (sts-realista §2.2): mood real do Unified Assessor quando
+  // disponível (simplified pipeline). Fallback proxy trustLevel quando
+  // assessment ausente (pipeline antigo ou erro).
+  if (helixState && !(helixState as { vacationModeActive?: boolean }).vacationModeActive) {
+    const prevTrust = (state.trustLevel as number | undefined) ?? 0.3;
+    const trustDelta = trustLevel - prevTrust;
+    const delta = trustDelta > 0.02 ? 0.10 : trustDelta > 0 ? 0.05 : 0;
+    const moodReal = drota.assessment?.mood;
+    const moodFinal =
+      typeof moodReal === "number" ? moodReal : trustLevel >= 0.4 ? 8 : 2;
+    try {
+      await motorExecucao.callTool(
+        { name: "advance_helix", arguments: { childId: persona.id, delta, mood: moodFinal } },
+        undefined,
+        { timeout: MCP_REQUEST_TIMEOUT },
+      );
+    } catch {
+      // Fail-soft
+    }
+  }
 
   return {
     botMessage: drota.linguisticMaterialization,

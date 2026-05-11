@@ -6,6 +6,13 @@ import type { PersonaNextMessageOutput } from "@ascendimacy/sts-shared";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+// Timeout pra MCP callTool ao persona-sim. Default MCP SDK = 60s, insuficiente
+// pra prompt eval cold + gen sob carga (vimos 89s+ persona-sim em smoke v3).
+// Configurável via STS_MCP_TIMEOUT_MS (mesma var que motor-client usa, simétrico).
+const PERSONA_MCP_TIMEOUT = Number(
+  process.env["STS_MCP_TIMEOUT_MS"] ?? "180000",
+);
+
 let _client: Client | null = null;
 
 function buildEnv(): Record<string, string> {
@@ -31,6 +38,10 @@ function buildEnv(): Record<string, string> {
     "ASC_LLM_TIMEOUT_SECONDS",
     "ASC_LLM_MAX_RETRIES",
     "LLM_THINKING_BUDGET_TOKENS",
+    // Local provider (vLLM / OVMS / llama-server) — motor-simplificacao-v1
+    "LOCAL_LLM_BASE_URL",
+    "LOCAL_LLM_MODEL",
+    "LOCAL_LLM_API_KEY",
   ];
   for (const k of keys) {
     const v = process.env[k];
@@ -98,10 +109,14 @@ export async function personaNextMessage(
   }
 
   const client = await getPersonaClient();
-  const result = await client.callTool({
-    name: "persona_next_message",
-    arguments: { personaId, botMessage, history },
-  });
+  const result = await client.callTool(
+    {
+      name: "persona_next_message",
+      arguments: { personaId, botMessage, history },
+    },
+    undefined,
+    { timeout: PERSONA_MCP_TIMEOUT },
+  );
   const r = result as { content: Array<{ type: string; text: string }>; isError?: boolean };
   const text = r.content?.find((c) => c.type === "text")?.text ?? "";
   if (r.isError) {
@@ -113,7 +128,11 @@ export async function personaNextMessage(
 export async function personaReset(personaId: string): Promise<void> {
   if (process.env["USE_MOCK_LLM"] === "true") return;
   const client = await getPersonaClient();
-  await client.callTool({ name: "persona_reset", arguments: { personaId } });
+  await client.callTool(
+    { name: "persona_reset", arguments: { personaId } },
+    undefined,
+    { timeout: PERSONA_MCP_TIMEOUT },
+  );
 }
 
 export async function closePersonaClient(): Promise<void> {

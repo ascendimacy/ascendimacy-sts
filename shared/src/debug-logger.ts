@@ -56,6 +56,12 @@ export interface DebugEventInput {
   snapshots_post?: Record<string, unknown> | null;
   outcome: "ok" | "error" | "skip";
   error_class?: string | null;
+  /**
+   * 2026-05-05 bugfix: razão de mock quando o evento foi servido por callLlmMock,
+   * heurística rule-based, ou stub. Distingue "real LLM call" de "fallback mock"
+   * em traces (antes provider/model ficavam com label estático mascarando origem).
+   */
+  mock_reason?: string | null;
 }
 
 export interface DebugEventLine {
@@ -83,6 +89,7 @@ export interface DebugEventLine {
   snapshots_post: Record<string, string> | null;
   outcome: "ok" | "error" | "skip";
   error_class: string | null;
+  mock_reason: string | null;
 }
 
 /** Computa sha256 hex + prefixo "sha256:". */
@@ -181,6 +188,7 @@ export function logDebugEvent(input: DebugEventInput): void {
       snapshots_post: snapshotsPostHashes,
       outcome: input.outcome,
       error_class: input.error_class ?? null,
+      mock_reason: input.mock_reason ?? null,
     };
 
     appendFileSync(join(root, "events.ndjson"), JSON.stringify(line) + "\n", "utf-8");

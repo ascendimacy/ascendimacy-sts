@@ -6,11 +6,11 @@ import { createSessionTrace, finalizeTrace, addTurn } from "../shared/dist/index
 import { runMotorTurn } from "../orchestrator/dist/motor-client.js";
 import { evaluateRubric } from "../orchestrator/dist/rubric.js";
 
-process.env["USE_MOCK_LLM"] = "true";
+process.env["USE_MOCK_LLM"] ??= "true";
 process.env["MOTOR_PATH"] = process.env["MOTOR_PATH"] ?? "/home/alexa/ascendimacy-motor";
 
-const PERSONA_ID = "paula-mendes";
-const TURNS = 3;
+const PERSONA_ID = process.env["SMOKE_PERSONA"] ?? "paula-mendes";
+const TURNS = Number(process.env["SMOKE_TURNS"] ?? "3");
 
 console.log(`[smoke] Running ${TURNS}-turn mock scenario for ${PERSONA_ID}`);
 
@@ -23,8 +23,31 @@ const MOCK_PERSONA_RESPONSES = [
   { message: "Até logo.", endConversation: true, mood: "closing" },
 ];
 
+// Mensagens reais que o sujeito ENVIA pro motor (incomingMessage). Por turn.
+// Variar entre turn vazio (puxa rapport), turn com tema concreto (puxa
+// materialização contextual), turn de fechamento.
+const PERSONA_INCOMING_MESSAGES = {
+  "ryo-ochiai": [
+    "oi",
+    "tava pensando nos delfins do aquário ontem, eles meio que se chamavam",
+    "tô meio cansado, vou dormir",
+  ],
+  "kei-ochiai": [
+    "oi",
+    "fiquei pensando por que choro às vezes mesmo sem motivo",
+    "obrigado, depois eu te conto",
+  ],
+  "paula-mendes": [
+    "oi, tudo bem?",
+    "tô meio frustrada, nada saiu como queria essa semana",
+    "preciso ir agora",
+  ],
+};
+const personaIncoming = PERSONA_INCOMING_MESSAGES[PERSONA_ID] ?? Array.from({length: TURNS}, (_, i) => `Persona message ${i + 1}`);
+
 for (let i = 1; i <= TURNS; i++) {
-  const motorResult = await runMotorTurn(trace.sessionId, `Persona message ${i}`, i);
+  const incoming = personaIncoming[i - 1] ?? `Persona message ${i}`;
+  const motorResult = await runMotorTurn(trace.sessionId, incoming, i, PERSONA_ID);
   const personaResp = MOCK_PERSONA_RESPONSES[i - 1];
 
   addTurn(trace, {

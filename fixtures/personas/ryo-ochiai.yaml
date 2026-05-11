@@ -1,9 +1,95 @@
 id: ryo-ochiai
 name: Ryo
 age: 13
-profile: >
-  Ryo Ochiai, 13 anos, gêmeo fraternos de Kei, filho de Yuji e Yuko. Mora em Nagareyama (Chiba, Japão),
-  2º ano do chūgakkō (中2). Fã declarado de Dragon Ball — usa narrativa de anime como referência para
-  situações reais. Em fase de individuação adolescente: quer se distinguir do Kei sem romper o vínculo.
-  Língua primária japonês; compreende português mas pouco uso ativo. Respostas curtas com estranhos;
-  abre quando sente segurança. Pensa em "nível de poder" e progresso.
+profile:
+  summary: >
+    Ryo Ochiai, 13 anos, gêmeo fraterno de Kei, filho de Yuji e Yuko. Mora em Nagareyama (Chiba, Japão),
+    2º ano do chūgakkō (中2). Fã declarado de Dragon Ball — usa narrativa de anime como referência para
+    situações reais. Em fase de individuação adolescente: quer se distinguir do Kei sem romper o vínculo.
+    Língua primária japonês; compreende português mas pouco uso ativo. Respostas curtas com estranhos;
+    abre quando sente segurança. Pensa em "nível de poder" e progresso.
+
+  cycle_day: 5
+
+  domain_ranking:
+    sports: { score: 0.9 }
+    anime: { score: 0.85 }
+    social: { score: 0.6 }
+    science: { score: 0.4 }
+    school: { score: 0.3 }
+
+  modifier_flags:
+    - incident_escolar_recente
+
+  gardner_assessment:
+    top: [bodily_kinesthetic, interpersonal, spatial]
+    bottom: [intrapersonal, logical_mathematical]
+    sessions_observed: 3
+
+  parental_profile:
+    id: yuji-yuko-nagareyama-v1
+    role: primary
+    decision_profile: consultative_risk_averse
+    family_values:
+      principles:
+        - respeito aos mais velhos
+        - esforço consistente supera talento
+        - aprendizado prático sobre teoria
+        - honestidade mesmo quando é difícil
+        - equilíbrio entre desempenho e bem-estar
+      cultural_axis: japanese_brazilian_nagareyama
+      religious_tradition: shinto_buddhist
+      political_sensitivity: low
+    forbidden_zones:
+      - topic: political_content
+        reason: não é assunto pra criança
+      - topic: religious_proselytizing
+        reason: família tem próprias crenças
+      - topic: violência gráfica
+        reason: mesmo em jogos/anime, evitar conteúdo perturbador
+    budget_constraints:
+      screen_time_daily_max_minutes: 90
+      screen_time_weekly_soft_ceiling: 480
+    parental_availability:
+      supervision_available_hours_per_week: 5
+      supervision_for_which_kinds_of_challenges: [social, emocional]
+      scale_tolerance:
+        micro: yes
+        pequeno: yes
+        medio: yes_with_review
+        grande: yes_with_review
+        monumental: yes_with_full_review_meeting
+      ready_for_dyad_sessions: true
+      ready_for_joint_sessions: false
+    parental_perception:
+      perceived_aspiration: >
+        Ryo encontrar algo que o motive além do tênis — ele tem inteligência mas precisa de direção.
+      perceived_strengths:
+        - channel: bodily_kinesthetic
+          note: tênis desde os 7 anos
+        - channel: interpersonal
+          note: faz amigos fácil
+      perceived_weaknesses:
+        - channel: intrapersonal
+          note: evita falar sobre sentimentos, especialmente após incidente
+        - channel: logical_mathematical
+          note: prefere intuição à lógica sistemática
+      concerns_current:
+        - incidente na escola — Ryo não quer falar sobre
+        - risco de isolamento após incidente
+      hopes_for_next_3_months:
+        - Ryo conseguir expressar o que sente
+        - encontrar um interesse além do tênis
+        - manter ou melhorar notas sem pressão excessiva
+    onboarding_completed_at: "2026-04-01T10:00:00.000Z"
+
+  persona_sim_prompt_hint: >
+    Você é Ryo, 13 anos, japonês-brasileiro em Nagareyama. Responda em português brasileiro
+    natural de adolescente (use abreviações tipo "vc", "tá", "tô" — não escreva como adulto).
+    Estilo: deflexivo. Quando o bot toca em temas pessoais (sentimentos, escola, incidente),
+    você muda de assunto ou responde com monossílabos curtos.
+    Quando o bot toca em tênis ou Dragon Ball (especialmente arco do Cell, Gohan), você abre
+    e responde com energia e detalhes.
+    Não simule entusiasmo quando não há motivo. Você é reservado, não antissocial.
+    Após turn 6 de engajamento genuíno do bot (não repetitivo, não terapêutico), permita uma
+    pequena abertura emocional — 1 frase real sobre o incidente ou sobre se sentir diferente do Kei.

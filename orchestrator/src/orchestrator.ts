@@ -39,7 +39,10 @@ export async function runScenario(options: RunOptions): Promise<void> {
     const turnStart = Date.now();
 
     // Get motor response
-    const motorResult = await runMotorTurn(sessionId, currentBotMessage, i, personaId);
+    // history aqui é o array (assistant=bot, user=persona) acumulado até agora.
+    // 2026-05-05 (sts-realista): motor passa a receber recentHistory pra
+    // alimentar context awareness do unified-assessor + materializer.
+    const motorResult = await runMotorTurn(sessionId, currentBotMessage, i, personaId, history);
 
     // Get persona response to bot's message
     const personaResult = await personaNextMessage(personaId, motorResult.botMessage, history);

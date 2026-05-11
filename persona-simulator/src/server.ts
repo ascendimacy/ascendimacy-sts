@@ -5,7 +5,7 @@ import { z } from "zod";
 import { loadPersonas, getPersona } from "./persona-loader.js";
 import { getPersonaNextMessage } from "./llm-client.js";
 import type { PersonaState } from "./types.js";
-import { logDebugEvent } from "@ascendimacy/sts-shared";
+import { logDebugEvent, getProviderForStep, getModelForStep } from "@ascendimacy/sts-shared";
 
 const server = new McpServer({
   name: "persona-simulator",
@@ -59,6 +59,13 @@ function getState(personaId: string): PersonaState {
     const effectiveHistory = args.history ?? state.history;
     const turnIndex = Math.floor(effectiveHistory.length / 2) + 1;
 
+    // 2026-05-05: provider/model efetivos refletem dispatch real (mock/anthropic/local/infomaniak).
+    // useMock cobre USE_MOCK_LLM=true; provider real vem do router.
+    const useMockPersona = process.env["USE_MOCK_LLM"] === "true";
+    const personaProvider = useMockPersona ? "mock" : getProviderForStep("persona-sim");
+    const personaModel = useMockPersona ? "mock" : getModelForStep("persona-sim", personaProvider);
+    const personaMockReason = useMockPersona ? "USE_MOCK_LLM=true" : null;
+
     try {
       const result = await getPersonaNextMessage(persona, args.botMessage, effectiveHistory);
       state.history.push({ role: "assistant", content: args.botMessage });
@@ -72,8 +79,9 @@ function getState(personaId: string): PersonaState {
         user_kind: "child", // v1 assume child; futuro: lookup via persona.kind
         motor_target: "kids",
         turn_number: turnIndex,
-        model: "claude-sonnet-4-6",
-        provider: "anthropic",
+        model: personaModel,
+        provider: personaProvider,
+        mock_reason: personaMockReason,
         tokens: result._debug
           ? { in: result._debug.tokens.in, out: result._debug.tokens.out, reasoning: 0 }
           : null,
@@ -115,8 +123,9 @@ function getState(personaId: string): PersonaState {
         user_id: args.personaId,
         motor_target: "kids",
         turn_number: turnIndex,
-        model: "claude-sonnet-4-6",
-        provider: "anthropic",
+        model: personaModel,
+        provider: personaProvider,
+        mock_reason: personaMockReason,
         outcome: "error",
         error_class: String((err as Error).name ?? "Error"),
         response: String((err as Error).message ?? String(err)),

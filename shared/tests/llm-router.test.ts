@@ -1,5 +1,8 @@
 /**
  * Tests llm-router (motor#21) — provider selection + model routing + max_tokens.
+ *
+ * 2026-05-07: default mudou de infomaniak→local (Qwen3-30B via llama.cpp SYCL).
+ * Testes atualizados aqui pra refletir DEFAULT_PROVIDERS/DEFAULT_MODELS atuais.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
@@ -34,18 +37,18 @@ afterEach(() => {
 });
 
 describe("getProviderForStep", () => {
-  it("default infomaniak pra todos os steps", () => {
-    expect(getProviderForStep("planejador")).toBe("infomaniak");
-    expect(getProviderForStep("drota")).toBe("infomaniak");
-    expect(getProviderForStep("persona-sim")).toBe("infomaniak");
-    expect(getProviderForStep("haiku-triage")).toBe("infomaniak");
-    expect(getProviderForStep("haiku-bullying")).toBe("infomaniak");
+  it("default local pra todos os steps", () => {
+    expect(getProviderForStep("planejador")).toBe("local");
+    expect(getProviderForStep("drota")).toBe("local");
+    expect(getProviderForStep("persona-sim")).toBe("local");
+    expect(getProviderForStep("haiku-triage")).toBe("local");
+    expect(getProviderForStep("haiku-bullying")).toBe("local");
   });
 
   it("PLANEJADOR_PROVIDER override per-step", () => {
     process.env["PLANEJADOR_PROVIDER"] = "anthropic";
     expect(getProviderForStep("planejador")).toBe("anthropic");
-    expect(getProviderForStep("drota")).toBe("infomaniak"); // não afeta outros
+    expect(getProviderForStep("drota")).toBe("local"); // não afeta outros
   });
 
   it("hyphen no step name vira underscore no env (haiku-triage → HAIKU_TRIAGE_PROVIDER)", () => {
@@ -67,8 +70,8 @@ describe("getProviderForStep", () => {
   });
 
   it("valor inválido em env → fallback default", () => {
-    process.env["PLANEJADOR_PROVIDER"] = "openai"; // não é "anthropic" nem "infomaniak"
-    expect(getProviderForStep("planejador")).toBe("infomaniak"); // default
+    process.env["PLANEJADOR_PROVIDER"] = "openai"; // não é "anthropic", "infomaniak" nem "local"
+    expect(getProviderForStep("planejador")).toBe("local"); // default
   });
 
   it("step desconhecido → infomaniak fallback", () => {
@@ -77,20 +80,26 @@ describe("getProviderForStep", () => {
 });
 
 describe("getModelForStep", () => {
-  it("default Kimi K2.5 pra planejador/drota/persona-sim (Infomaniak)", () => {
-    expect(getModelForStep("planejador")).toBe("moonshotai/Kimi-K2.5");
-    expect(getModelForStep("drota")).toBe("moonshotai/Kimi-K2.5");
-    expect(getModelForStep("persona-sim")).toBe("moonshotai/Kimi-K2.5");
+  it("default qwen3-30b pra planejador/drota/persona-sim (local)", () => {
+    expect(getModelForStep("planejador")).toBe("qwen3-30b");
+    expect(getModelForStep("drota")).toBe("qwen3-30b");
+    expect(getModelForStep("persona-sim")).toBe("qwen3-30b");
   });
 
-  it("default mistral3 pra haiku-triage/haiku-bullying (rerank, sem reasoning)", () => {
-    expect(getModelForStep("haiku-triage")).toBe("mistral3");
-    expect(getModelForStep("haiku-bullying")).toBe("mistral3");
+  it("default qwen3-30b pra haiku-triage/haiku-bullying (local, llama-server single-model)", () => {
+    expect(getModelForStep("haiku-triage")).toBe("qwen3-30b");
+    expect(getModelForStep("haiku-bullying")).toBe("qwen3-30b");
   });
 
   it("provider=anthropic → Claude fallback", () => {
     expect(getModelForStep("planejador", "anthropic")).toBe("claude-sonnet-4-6");
     expect(getModelForStep("haiku-triage", "anthropic")).toBe("claude-haiku-4-5-20251001");
+  });
+
+  it("provider=infomaniak → Infomaniak fallback (Kimi/mistral3)", () => {
+    expect(getModelForStep("planejador", "infomaniak")).toBe("moonshotai/Kimi-K2.5");
+    expect(getModelForStep("drota", "infomaniak")).toBe("moonshotai/Kimi-K2.5");
+    expect(getModelForStep("haiku-triage", "infomaniak")).toBe("mistral3");
   });
 
   it("explicit env beats default", () => {
@@ -174,8 +183,8 @@ describe("shouldEnableThinking", () => {
 });
 
 describe("constants exposure", () => {
-  it("DEFAULT_PROVIDERS é Infomaniak everywhere", () => {
-    for (const v of Object.values(DEFAULT_PROVIDERS)) expect(v).toBe("infomaniak");
+  it("DEFAULT_PROVIDERS é local everywhere (2026-05-07 mudança)", () => {
+    for (const v of Object.values(DEFAULT_PROVIDERS)) expect(v).toBe("local");
   });
   it("DEFAULT_MODELS preenchido pra todos os steps", () => {
     expect(DEFAULT_MODELS["planejador"]).toBeTruthy();

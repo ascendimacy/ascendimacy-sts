@@ -17,7 +17,16 @@
  *   PERSONA_SIM_MODEL=mistral3
  */
 
-export type LlmProvider = "anthropic" | "infomaniak";
+/**
+ * Provider canônicos:
+ *  - "anthropic"     — Anthropic API direta (claude-sonnet-4-6, etc.)
+ *  - "infomaniak"    — Infomaniak OpenAI-compat (Kimi K2.5, Mistral3, etc.)
+ *  - "openai-compat" — endpoint OpenAI-compat genérico (LLM local
+ *                      llama.cpp SYCL, vLLM-XPU). D-3-PROV motor#1055;
+ *                      adicionado em STS após smoke 2026-05-24 expor
+ *                      gap end-to-end com Qwen3-30B local.
+ */
+export type LlmProvider = "anthropic" | "infomaniak" | "openai-compat";
 
 /** Steps válidos com config defaults. */
 export const LLM_STEPS = [
@@ -81,10 +90,41 @@ function envKey(step: string, suffix: string): string {
  */
 export function getProviderForStep(step: string): LlmProvider {
   const perStep = process.env[envKey(step, "PROVIDER")];
-  if (perStep === "anthropic" || perStep === "infomaniak") return perStep;
+  if (
+    perStep === "anthropic" ||
+    perStep === "infomaniak" ||
+    perStep === "openai-compat"
+  ) {
+    return perStep;
+  }
   const global = process.env["LLM_PROVIDER"];
-  if (global === "anthropic" || global === "infomaniak") return global;
+  if (
+    global === "anthropic" ||
+    global === "infomaniak" ||
+    global === "openai-compat"
+  ) {
+    return global;
+  }
   return DEFAULT_PROVIDERS[step as LlmStep] ?? "infomaniak";
+}
+
+/**
+ * Decide se step deve cair em mock-LLM fixture.
+ *
+ * Mirror do motor `shared/src/llm-router.ts shouldUseMockLlm` —
+ * provider-aware (D-3-PROV motor#1055 follow-up):
+ *   - USE_MOCK_LLM=true → mock (operador override)
+ *   - anthropic sem ANTHROPIC_API_KEY → mock
+ *   - infomaniak sem INFOMANIAK_API_KEY → mock
+ *   - openai-compat → NUNCA mock por key (LLM local, sem API key)
+ */
+export function shouldUseMockLlm(step: string): boolean {
+  if (process.env["USE_MOCK_LLM"] === "true") return true;
+  const provider = getProviderForStep(step);
+  if (provider === "anthropic") return !process.env["ANTHROPIC_API_KEY"];
+  if (provider === "infomaniak") return !process.env["INFOMANIAK_API_KEY"];
+  // openai-compat: LLM local, no key required
+  return false;
 }
 
 /**
@@ -111,6 +151,12 @@ export function getModelForStep(step: string, provider?: LlmProvider): string {
   const p = provider ?? getProviderForStep(step);
   if (p === "anthropic") {
     return ANTHROPIC_FALLBACK_MODELS[step as LlmStep] ?? "claude-sonnet-4-6";
+  }
+  // D-3-PROV: openai-compat = LLM local. Modelo vem da env LLM_LOCAL_MODEL
+  // (canônico nos LLM-LOCAL integration tests). "unknown" quando ausente
+  // — força operador a setar explicitamente o modelo que está rodando.
+  if (p === "openai-compat") {
+    return process.env["LLM_LOCAL_MODEL"] ?? "unknown";
   }
   return DEFAULT_MODELS[step as LlmStep] ?? "moonshotai/Kimi-K2.5";
 }

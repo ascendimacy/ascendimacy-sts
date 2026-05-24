@@ -48,6 +48,12 @@ function buildEnv(): Record<string, string> {
     "ASC_LLM_MAX_RETRIES_DROTA",
     "ASC_LLM_MAX_RETRIES",
     "LLM_THINKING_BUDGET_TOKENS",
+    // LLM local (openai-compat, D-3-PROV motor ops#1055) — endpoint
+    // + model usados pelo bypass do gateway-client. Sem essas, motor
+    // subspawn cai no default localhost:8080/v1/chat/completions
+    // (que no setup do desenvolvedor coincide com Open WebUI → 405).
+    "LLM_LOCAL_ENDPOINT",
+    "LLM_LOCAL_MODEL",
   ];
   for (const k of keys) {
     const v = process.env[k];

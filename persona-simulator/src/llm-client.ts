@@ -216,6 +216,66 @@ async function callAnthropicPersona(
   return { textContent, reasoning, tokens: { in: usage.input_tokens, out: usage.output_tokens }, latency_ms };
 }
 
+/**
+ * Bypass pra provider=openai-compat (LLM local llama.cpp/vLLM-XPU).
+ * D-3-PROV motor#1055 mirror — fetch direto OpenAI-compat schema,
+ * sem retry coordenado (não tem SDK próprio).
+ *
+ * Endpoint default: http://localhost:8080/v1/chat/completions
+ * Override via env LLM_LOCAL_ENDPOINT. Modelo via LLM_LOCAL_MODEL.
+ */
+async function callOpenAiCompatPersona(
+  systemPrompt: string,
+  step: string,
+): Promise<{ textContent: string; reasoning?: string; tokens: { in: number; out: number }; latency_ms: number }> {
+  const endpoint =
+    process.env["LLM_LOCAL_ENDPOINT"] ??
+    "http://localhost:8080/v1/chat/completions";
+  const { getLlmTimeoutMs, getModelForStep, getMaxTokensForStep } = await import("@ascendimacy/sts-shared");
+  const model = getModelForStep(step, "openai-compat");
+  const maxTokens = getMaxTokensForStep(step, model);
+  const timeoutMs = getLlmTimeoutMs(step);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const t0 = Date.now();
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: "user", content: systemPrompt }],
+        max_tokens: maxTokens,
+      }),
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(
+        `openai-compat persona error: HTTP_${res.status} — ${text.slice(0, 200)}`,
+      );
+    }
+    const parsed = (await res.json()) as {
+      choices?: Array<{ message?: { content?: string } }>;
+      usage?: { prompt_tokens?: number; completion_tokens?: number };
+    };
+    const textContent = parsed.choices?.[0]?.message?.content ?? "";
+    if (!textContent) {
+      throw new Error("openai-compat persona error: EMPTY_RESPONSE — no content");
+    }
+    return {
+      textContent,
+      tokens: {
+        in: parsed.usage?.prompt_tokens ?? 0,
+        out: parsed.usage?.completion_tokens ?? 0,
+      },
+      latency_ms: Date.now() - t0,
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function callInfomaniakPersona(
   systemPrompt: string,
   step: string,
@@ -277,9 +337,18 @@ export async function getPersonaNextMessage(
   const { getProviderForStep } = await import("@ascendimacy/sts-shared");
   const provider = getProviderForStep("persona-sim");
 
-  const callResult = provider === "anthropic"
-    ? await callAnthropicPersona(systemPrompt, "persona-sim", debugMode)
-    : await callInfomaniakPersona(systemPrompt, "persona-sim");
+  // sts dispatch trifurcado (D-3-PROV motor#1055):
+  //  anthropic     → Anthropic SDK
+  //  openai-compat → fetch direto (LLM local llama.cpp/vLLM-XPU)
+  //  infomaniak    → OpenAI SDK + Infomaniak baseURL (default)
+  let callResult: Awaited<ReturnType<typeof callInfomaniakPersona>>;
+  if (provider === "anthropic") {
+    callResult = await callAnthropicPersona(systemPrompt, "persona-sim", debugMode);
+  } else if (provider === "openai-compat") {
+    callResult = await callOpenAiCompatPersona(systemPrompt, "persona-sim");
+  } else {
+    callResult = await callInfomaniakPersona(systemPrompt, "persona-sim");
+  }
 
   const { textContent, reasoning, tokens, latency_ms } = callResult;
   const parsed = parsePersonaResponse(textContent);

@@ -8,6 +8,7 @@ import {
   getModelForStep,
   getMaxTokensForStep,
   shouldEnableThinking,
+  shouldUseMockLlm,
   isReasoningModel,
   DEFAULT_PROVIDERS,
   DEFAULT_MODELS,
@@ -187,5 +188,75 @@ describe("constants exposure", () => {
   it("ANTHROPIC_FALLBACK_MODELS usa Claude", () => {
     expect(ANTHROPIC_FALLBACK_MODELS["planejador"]).toContain("claude");
     expect(ANTHROPIC_FALLBACK_MODELS["haiku-triage"]).toContain("haiku");
+  });
+});
+
+describe("openai-compat support (D-3-PROV motor#1055)", () => {
+  const KEYS = [
+    "USE_MOCK_LLM",
+    "ANTHROPIC_API_KEY",
+    "INFOMANIAK_API_KEY",
+    "LLM_PROVIDER",
+    "LLM_LOCAL_MODEL",
+    "PERSONA_SIM_PROVIDER",
+  ];
+  const saved: Record<string, string | undefined> = {};
+
+  beforeEach(() => {
+    for (const k of KEYS) {
+      saved[k] = process.env[k];
+      delete process.env[k];
+    }
+  });
+  afterEach(() => {
+    for (const k of KEYS) {
+      if (saved[k] === undefined) delete process.env[k];
+      else process.env[k] = saved[k];
+    }
+  });
+
+  it("getProviderForStep aceita openai-compat via env", () => {
+    process.env["LLM_PROVIDER"] = "openai-compat";
+    expect(getProviderForStep("persona-sim")).toBe("openai-compat");
+  });
+
+  it("getProviderForStep aceita openai-compat via per-step env", () => {
+    process.env["PERSONA_SIM_PROVIDER"] = "openai-compat";
+    expect(getProviderForStep("persona-sim")).toBe("openai-compat");
+  });
+
+  it("getModelForStep openai-compat resolve via LLM_LOCAL_MODEL", () => {
+    process.env["LLM_LOCAL_MODEL"] = "qwen3-30b";
+    expect(getModelForStep("persona-sim", "openai-compat")).toBe("qwen3-30b");
+  });
+
+  it("getModelForStep openai-compat sem LLM_LOCAL_MODEL → unknown", () => {
+    expect(getModelForStep("persona-sim", "openai-compat")).toBe("unknown");
+  });
+
+  it("shouldUseMockLlm: USE_MOCK_LLM=true sempre força mock", () => {
+    process.env["USE_MOCK_LLM"] = "true";
+    process.env["LLM_PROVIDER"] = "openai-compat";
+    expect(shouldUseMockLlm("persona-sim")).toBe(true);
+  });
+
+  it("shouldUseMockLlm: anthropic sem key → mock", () => {
+    process.env["LLM_PROVIDER"] = "anthropic";
+    expect(shouldUseMockLlm("persona-sim")).toBe(true);
+  });
+
+  it("shouldUseMockLlm: infomaniak sem key → mock", () => {
+    process.env["LLM_PROVIDER"] = "infomaniak";
+    expect(shouldUseMockLlm("persona-sim")).toBe(true);
+  });
+
+  it("shouldUseMockLlm: openai-compat sem nenhuma key → real (LLM local)", () => {
+    process.env["LLM_PROVIDER"] = "openai-compat";
+    expect(shouldUseMockLlm("persona-sim")).toBe(false);
+  });
+
+  it("shouldEnableThinking openai-compat sempre false (não suporta)", () => {
+    expect(shouldEnableThinking("persona-sim", "openai-compat", true)).toBe(false);
+    expect(shouldEnableThinking("persona-sim", "openai-compat", false)).toBe(false);
   });
 });

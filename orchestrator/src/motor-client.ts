@@ -1,5 +1,16 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+
+/**
+ * MCP request timeout pra callTool — D-3-PROV motor#1055 follow-up.
+ * Mesmo helper do persona-client.ts. Default 300_000ms (5min) cobre
+ * cold-prefix LLM local; override via env MCP_CALL_TIMEOUT_MS.
+ */
+function mcpRequestOptions(): { timeout: number } {
+  const env = process.env["MCP_CALL_TIMEOUT_MS"];
+  const n = env ? Number.parseInt(env, 10) : NaN;
+  return { timeout: Number.isFinite(n) && n > 0 ? n : 300_000 };
+}
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { existsSync, readFileSync } from "fs";
@@ -227,13 +238,21 @@ export async function runMotorTurn(
   const { persona, adquirente, inventory } = loadMotorFixtures(motorPath, personaId);
   const { planejador, motorDrota, motorExecucao } = clients;
 
-  const stateResult = await motorExecucao.callTool({ name: "get_state", arguments: { sessionId } });
+  const stateResult = await motorExecucao.callTool(
+    { name: "get_state", arguments: { sessionId } },
+    undefined,
+    mcpRequestOptions(),
+  );
   const state = parseToolText<Record<string, unknown>>(stateResult);
 
-  const planResult = await planejador.callTool({
-    name: "plan_turn",
-    arguments: { sessionId, persona, adquirente, inventory, state, incomingMessage: personaMessage },
-  });
+  const planResult = await planejador.callTool(
+    {
+      name: "plan_turn",
+      arguments: { sessionId, persona, adquirente, inventory, state, incomingMessage: personaMessage },
+    },
+    undefined,
+    mcpRequestOptions(),
+  );
   const plan = parseToolText<{
     contentPool?: unknown[];
     strategicRationale?: string;
@@ -241,18 +260,22 @@ export async function runMotorTurn(
     instruction_addition?: string;
   }>(planResult);
 
-  const drotaResult = await motorDrota.callTool({
-    name: "evaluate_and_select",
-    arguments: {
-      sessionId,
-      contentPool: plan.contentPool ?? [],
-      state,
-      persona,
-      strategicRationale: plan.strategicRationale ?? "",
-      contextHints: plan.contextHints ?? {},
-      instruction_addition: plan.instruction_addition ?? "",
+  const drotaResult = await motorDrota.callTool(
+    {
+      name: "evaluate_and_select",
+      arguments: {
+        sessionId,
+        contentPool: plan.contentPool ?? [],
+        state,
+        persona,
+        strategicRationale: plan.strategicRationale ?? "",
+        contextHints: plan.contextHints ?? {},
+        instruction_addition: plan.instruction_addition ?? "",
+      },
     },
-  });
+    undefined,
+    mcpRequestOptions(),
+  );
   let drota = parseToolText<{
     selectedContent?: {
       item?: {
@@ -283,16 +306,20 @@ export async function runMotorTurn(
   const deployProfileId = (inventory[0] as { id?: string } | undefined)?.id ?? "default";
   const selectedContentId = drota.selectedContent?.item?.id ?? "";
 
-  const execResult = await motorExecucao.callTool({
-    name: "execute_playbook",
-    arguments: {
-      sessionId,
-      playbookId: deployProfileId,
-      selectedContentId,
-      output: drota.linguisticMaterialization,
-      metadata: {},
+  const execResult = await motorExecucao.callTool(
+    {
+      name: "execute_playbook",
+      arguments: {
+        sessionId,
+        playbookId: deployProfileId,
+        selectedContentId,
+        output: drota.linguisticMaterialization,
+        metadata: {},
+      },
     },
-  });
+    undefined,
+    mcpRequestOptions(),
+  );
   const exec = parseToolText<{
     newState?: { trustLevel?: number; budgetRemaining?: number };
     trustLevel?: number;
@@ -311,10 +338,14 @@ export async function runMotorTurn(
       : undefined;
   let currentStatusMatrix = (state as { statusMatrix?: Record<string, string> }).statusMatrix;
   try {
-    const newStateResult = await motorExecucao.callTool({
-      name: "get_state",
-      arguments: { sessionId },
-    });
+    const newStateResult = await motorExecucao.callTool(
+      {
+        name: "get_state",
+        arguments: { sessionId },
+      },
+      undefined,
+      mcpRequestOptions(),
+    );
     const newState = parseToolText<{ statusMatrix?: Record<string, string> }>(newStateResult);
     currentStatusMatrix = newState.statusMatrix ?? currentStatusMatrix;
   } catch {

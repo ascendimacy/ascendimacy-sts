@@ -95,7 +95,50 @@ function buildEnv(): Record<string, string> {
     const v = process.env[k];
     if (v) env[k] = v;
   }
+  // Boundary translation: STS terminology → motor terminology.
+  //
+  // STS canonical (motor-simplificacao-v1): provider="local" +
+  //   LOCAL_LLM_BASE_URL (base sem /chat/completions) + LOCAL_LLM_MODEL.
+  // Motor canonical (D-3-PROV motor ops#1055): provider="openai-compat" +
+  //   LLM_LOCAL_ENDPOINT (URL completa até /chat/completions) +
+  //   LLM_LOCAL_MODEL.
+  //
+  // Cada repo mantém seu vocabulário interno; a tradução acontece aqui
+  // pra que motor children spawned por STS recebam o env que sabem ler.
+  // Sem essa tradução, motor não reconhece LLM_PROVIDER=local e cai em
+  // mock por fallback infomaniak+keyMissing (reproduzido em smoke
+  // 2026-05-24 contra Qwen3-30B).
+  translateLocalToOpenaiCompat(env);
   return env;
+}
+
+/**
+ * Exported pra unit test. Em produção é chamado por buildEnv. Mutates env in place.
+ */
+export function translateLocalToOpenaiCompat(env: Record<string, string>): void {
+  if (env["LLM_PROVIDER"] === "local") {
+    env["LLM_PROVIDER"] = "openai-compat";
+  }
+  for (const k of [
+    "PLANEJADOR_PROVIDER",
+    "DROTA_PROVIDER",
+    "PERSONA_SIM_PROVIDER",
+    "HAIKU_TRIAGE_PROVIDER",
+    "HAIKU_BULLYING_PROVIDER",
+    "MOOD_EXTRACTOR_PROVIDER",
+    "UNIFIED_ASSESSOR_PROVIDER",
+    "SIGNAL_EXTRACTOR_PROVIDER",
+  ]) {
+    if (env[k] === "local") env[k] = "openai-compat";
+  }
+  if (env["LOCAL_LLM_BASE_URL"] && !env["LLM_LOCAL_ENDPOINT"]) {
+    // base /v1 → endpoint /v1/chat/completions
+    const base = env["LOCAL_LLM_BASE_URL"].replace(/\/+$/, "");
+    env["LLM_LOCAL_ENDPOINT"] = `${base}/chat/completions`;
+  }
+  if (env["LOCAL_LLM_MODEL"] && !env["LLM_LOCAL_MODEL"]) {
+    env["LLM_LOCAL_MODEL"] = env["LOCAL_LLM_MODEL"];
+  }
 }
 
 function getMotorPath(): string {

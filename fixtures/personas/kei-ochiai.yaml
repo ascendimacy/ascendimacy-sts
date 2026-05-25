@@ -81,6 +81,29 @@ profile:
       hopes_for_next_3_months:
         - flexibilizar respostas sociais sem perder estrutura
         - manter desempenho escolar
+    # ─── Subject Knowledge (spec 2026-05-25) ─────────────────────
+    # Derivado de concerns + hopes acima. Kei é estruturado: latent_needs
+    # focam no eixo que falta (fluidez), não no que já é forte (rigor).
+    latent_needs:
+      - flexibilidade emocional
+      - abertura social espontânea
+      - balanço entre rigor e improviso
+    aspirations:
+      proposed_traits:
+        - flexibilidade contextual
+        - abertura sem perder estrutura
+      # axis_id do catálogo lineage:
+      # 7 compaixão (vínculo social), 1 prudência (saber quando flexibilizar),
+      # 4 temperança (medida entre rigor e fluidez), 10 curiosidade (mente-de-iniciante).
+      proposed_virtues:
+        - axis: 7
+          note: vínculo — flexibilizar respostas sociais
+        - axis: 1
+          note: prudência — saber quando estruturar vs improvisar
+        - axis: 4
+          note: temperança — medida entre rigor e fluidez
+        - axis: 10
+          note: curiosidade — abrir espaço pra novas situações
     onboarding_completed_at: "2026-04-01T10:00:00.000Z"
 
   persona_sim_prompt_hint: >

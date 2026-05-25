@@ -81,6 +81,29 @@ profile:
         - Ryo conseguir expressar o que sente
         - encontrar um interesse além do tênis
         - manter ou melhorar notas sem pressão excessiva
+    # ─── Subject Knowledge (spec 2026-05-25) ─────────────────────
+    # Derivado de concerns + hopes acima. Latent_needs alimenta dim
+    # 'need' do scorer multi-dim sem exigir confirmação do filho.
+    latent_needs:
+      - expressão emocional
+      - processar incidente escolar
+      - direção pessoal além de tênis
+      - equilíbrio acadêmico sem pressão
+    aspirations:
+      proposed_traits:
+        - autoconhecimento
+        - direção própria
+      # axis_id do catálogo lineage (motor-drota/data/lineage-catalog.yaml):
+      # 1 prudência, 9 veracidade, 11 autoconhecimento, 12 responsabilidade.
+      proposed_virtues:
+        - axis: 11
+          note: autoconhecimento — fraqueza intrapessoal marcada
+        - axis: 9
+          note: veracidade — expressar o que sente em vez de deflectir
+        - axis: 1
+          note: prudência — direção, escolhas pessoais
+        - axis: 12
+          note: responsabilidade — manter notas sem pressão
     onboarding_completed_at: "2026-04-01T10:00:00.000Z"
 
   persona_sim_prompt_hint: >

@@ -41,10 +41,23 @@ function getMockResponse(personaId: string, turnIndex: number): PersonaNextMessa
   return JSON.parse(raw) as PersonaNextMessageOutput;
 }
 
+/**
+ * Subject Knowledge Fase 8 (cross-session memory).
+ * Resumo persistido de sessões anteriores, injetado no system prompt
+ * pra que a persona "lembre" o que aconteceu antes.
+ */
+export interface CrossSessionMemory {
+  summary_so_far?: string;
+  sessions_count?: number;
+  last_session_ended_at?: string;
+  last_session_trust_final?: number;
+}
+
 function buildSystemPrompt(
   persona: PersonaDef,
   botMessage: string,
-  history: Array<{ role: "user" | "assistant"; content: string }>
+  history: Array<{ role: "user" | "assistant"; content: string }>,
+  memory?: CrossSessionMemory
 ): string {
   const profileObj =
     typeof persona.profile === "object" && persona.profile !== null
@@ -75,6 +88,25 @@ function buildSystemPrompt(
 
   const turnNumber = Math.floor(history.length / 2) + 1;
 
+  // Subject Knowledge Fase 8: bloco de memória cross-session injetado
+  // quando há sessões anteriores. Persona modula tom/abertura baseado em
+  // o que lembra das conversas passadas.
+  const memoryBlock =
+    memory && (memory.summary_so_far || (memory.sessions_count ?? 0) > 0)
+      ? `
+
+<cross_session_memory>
+Você já teve ${memory.sessions_count ?? 1} sessão(ões) anterior(es) com este bot.
+${memory.last_session_ended_at ? `Última sessão terminou em: ${memory.last_session_ended_at}.` : ""}
+${memory.last_session_trust_final !== undefined ? `Confiança final da última sessão (0..1): ${memory.last_session_trust_final.toFixed(2)}.` : ""}
+${memory.summary_so_far ? `\nResumo do que aconteceu nas sessões anteriores (do seu ponto de vista):\n${memory.summary_so_far}` : ""}
+
+Considere essa memória ao responder. Você LEMBRA do que conversaram. Não é a primeira vez.
+Tom adapta conforme histórico: trust alto → mais aberto; trust baixo → mais reservado.
+Não repita os mesmos sinais iniciais de uma primeira sessão (apresentação, estranhamento).
+</cross_session_memory>`
+      : "";
+
   return `Você é ${persona.name}, ${persona.age} anos. Sua tarefa é responder como ${persona.name} responderia em uma conversa WhatsApp com um bot que propõe atividades educacionais ou transacionais. Simule fielmente as características da persona — vocabulário, nível de maturidade, humor, reatividade, hesitações.
 
 <persona>
@@ -90,7 +122,7 @@ profile: ${personaProfile}
 ${personaSimHint}
 </simulation_overlay>`
       : ""
-  }
+  }${memoryBlock}
 
 <conversation_history>
 ${historyFormatted}
@@ -372,13 +404,14 @@ async function callInfomaniakPersona(
 export async function getPersonaNextMessage(
   persona: PersonaDef,
   botMessage: string,
-  history: Array<{ role: "user" | "assistant"; content: string }>
+  history: Array<{ role: "user" | "assistant"; content: string }>,
+  memory?: CrossSessionMemory
 ): Promise<PersonaNextMessageResult> {
   if (process.env["USE_MOCK_LLM"] === "true") {
     return getMockResponse(persona.id, Math.floor(history.length / 2));
   }
 
-  const systemPrompt = buildSystemPrompt(persona, botMessage, history);
+  const systemPrompt = buildSystemPrompt(persona, botMessage, history, memory);
   const debugMode = process.env["ASC_DEBUG_MODE"] === "true" || process.env["ASC_DEBUG_MODE"] === "1";
 
   // sts#12: dispatch baseado em PERSONA_SIM_PROVIDER (default: infomaniak / Kimi K2.5)
@@ -404,3 +437,78 @@ export async function getPersonaNextMessage(
     },
   };
 }
+
+// ─────────────────────────────────────────────────────────────────────────
+// Subject Knowledge Fase 8 — cross-session summarizer
+// ─────────────────────────────────────────────────────────────────────────
+
+export interface SummarizeSessionInput {
+  persona: PersonaDef;
+  /** History completo da sessão recém-terminada. */
+  sessionHistory: Array<{ role: "user" | "assistant"; content: string }>;
+  /** Memória anterior (pra evolução incremental do summary). */
+  priorMemory?: CrossSessionMemory;
+  /** Trust final observado (sinal pra modular memória). */
+  finalTrust?: number;
+}
+
+/**
+ * Gera resumo cross-session do POV da persona após uma sessão terminar.
+ *
+ * Output é texto descritivo curto (~200-400 chars) em 1ª pessoa, capturando:
+ *  - Tema(s) principais conversados
+ *  - Como persona se sentiu (mood final)
+ *  - O que foi descoberto/aprendido (do POV da persona)
+ *  - Posição em relação ao bot (curiosa, cética, aberta, fechada)
+ *
+ * Mocked quando USE_MOCK_LLM=true.
+ */
+export async function summarizeSession(
+  input: SummarizeSessionInput,
+): Promise<string> {
+  if (process.env["USE_MOCK_LLM"] === "true") {
+    return `Mock summary: ${input.sessionHistory.length / 2} turns sobre temas variados. Trust final ${input.finalTrust ?? "?"}.`;
+  }
+
+  const prior = input.priorMemory?.summary_so_far ?? "(nenhuma memória anterior)";
+  const trustNote = input.finalTrust !== undefined ? ` Trust final ${input.finalTrust.toFixed(2)}.` : "";
+  const sessionTranscript = input.sessionHistory
+    .map((m) => `${m.role === "assistant" ? "Bot" : input.persona.name}: ${m.content}`)
+    .join("\n");
+
+  const summarizePrompt = `Você é ${input.persona.name}. A sessão acabou de terminar.${trustNote}
+
+Sua tarefa: ESCREVER UM RESUMO CURTO (3-5 frases, no máximo 400 caracteres) em 1ª pessoa, do SEU PONTO DE VISTA, sobre o que aconteceu nesta sessão. Esse resumo será sua "memória" pra quando você falar com o bot de novo no futuro.
+
+Cubra:
+1. Que assuntos rolaram? (1-2 frases)
+2. Como você se sentiu na conversa? (mood, abertura, fechamento)
+3. Algo que ficou na cabeça — pergunta não respondida, ideia que pegou, tema evitado.
+4. Qual sua posição agora em relação ao bot (curiosa, cética, mais aberta, mais fechada).
+
+NÃO escreva como o bot escreveria. NÃO use estrutura formal. Escreva como você ${input.persona.name} pensaria sobre essa sessão.
+
+<memoria_anterior>
+${prior}
+</memoria_anterior>
+
+<sessao_que_acabou>
+${sessionTranscript}
+</sessao_que_acabou>
+
+Retorne APENAS o texto do resumo, sem JSON, sem markdown, sem aspas envolvendo. Máx 400 chars.`;
+
+  // Reuse infra de provider dispatch
+  const { getProviderForStep } = await import("@ascendimacy/sts-shared");
+  const provider = getProviderForStep("persona-sim");
+  const debugMode = process.env["ASC_DEBUG_MODE"] === "true";
+
+  const result = provider === "anthropic"
+    ? await callAnthropicPersona(summarizePrompt, "persona-sim", debugMode)
+    : provider === "local"
+      ? await callLocalPersona(summarizePrompt, "persona-sim")
+      : await callInfomaniakPersona(summarizePrompt, "persona-sim");
+
+  return result.textContent.trim().slice(0, 600);
+}
+

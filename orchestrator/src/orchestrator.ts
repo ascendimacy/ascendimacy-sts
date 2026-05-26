@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import { createSessionTrace, finalizeTrace, addTurn } from "@ascendimacy/sts-shared";
 import { runMotorTurn, closeMotorClients } from "./motor-client.js";
-import { personaNextMessage, personaReset, closePersonaClient } from "./persona-client.js";
+import { personaNextMessage, personaReset, personaFinalizeSession, closePersonaClient } from "./persona-client.js";
 import { writeTrace } from "./trace-writer.js";
 import { evaluateRubric } from "./rubric.js";
 import { writeReport } from "./report.js";
@@ -97,6 +97,21 @@ export async function runScenario(options: RunOptions): Promise<void> {
   console.log(`[STS] Rubric: ${rubric.summary}`);
   for (const gate of rubric.gates) {
     console.log(`  ${gate.passed ? "✅" : gate.gate === "G5" ? "⚠️" : "❌"} ${gate.gate}: ${gate.detail}`);
+  }
+
+  // Subject Knowledge Fase 8: finaliza sessão (LLM summarize + persist cross-session memory).
+  // Multi-session scenarios precisam disso pra próxima sessão herdar contexto da persona.
+  // Single-session legacy scenarios não atrapalham — só geram summary descartado depois.
+  try {
+    const finalTrustVal = finalized.turns.length > 0
+      ? finalized.turns[finalized.turns.length - 1]?.trustLevel
+      : undefined;
+    const finalizeResult = await personaFinalizeSession(personaId, finalTrustVal);
+    if (finalizeResult.ok && finalizeResult.summary_preview) {
+      console.log(`[STS] Persona memory updated (sessions=${finalizeResult.sessions_count}): ${finalizeResult.summary_preview}`);
+    }
+  } catch (err) {
+    console.log(`[STS] (persona_finalize_session failed: ${(err as Error).message} — continuing)`);
   }
 
   await closePersonaClient();

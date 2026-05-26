@@ -1,0 +1,43 @@
+# tracer-helix-3sessions-ryo — validar cross-session memory (PR 0 do tracer bullet).
+#
+# 3 sessões consecutivas com Ryo, mesma persona, dias 1/3/5.
+# Objetivo: validar que persona-simulator persiste memória entre sessões
+# via persona_finalize_session (LLM summarize → summary_so_far → injection
+# no system prompt da próxima sessão).
+#
+# Critério de sucesso (manual no momento):
+# - Sessão 2 deve referenciar coisas da sessão 1 ("daquela vez você falou X")
+# - Sessão 3 deve mostrar abertura/fechamento coerente com trust acumulado
+# - .sts/persona-states/ryo-ochiai.json deve existir após sessão 1
+#   e atualizar após cada sessão subsequente
+#
+# Spec: ascendimacy-ops/docs/specs/2026-05-25-session-phases-journey-stages-strategist.md §1
+
+name: tracer-helix-3sessions-ryo
+
+start_date: "2026-05-25T00:00:00Z"
+end_date: "2026-05-29T23:59:59Z"
+
+personas: [ryo-ochiai]
+
+mock_llm: false
+state_dir: ".sts/state/tracer-helix-3sessions-ryo"
+
+events:
+  - day: 1
+    type: solo_session
+    persona: ryo-ochiai
+    turns: 4
+    label: ryo_helix_s1
+
+  - day: 3
+    type: solo_session
+    persona: ryo-ochiai
+    turns: 4
+    label: ryo_helix_s2
+
+  - day: 5
+    type: solo_session
+    persona: ryo-ochiai
+    turns: 4
+    label: ryo_helix_s3

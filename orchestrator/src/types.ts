@@ -11,6 +11,12 @@ export interface MotorTurnResult {
   budgetRemaining: number;
   playbookId: string;
   motorTrace?: unknown;
+  /**
+   * TV2-5 (motor spec ops#1136): EngineTraceV2 forward do motor —
+   * pass-through não tipado pra evitar dep cross-repo. Ver
+   * `shared/src/types.ts::TurnTrace.engineTrace`.
+   */
+  engineTrace?: unknown;
   /** sts#8 auto-hook — card_id quando detect+emit pipeline persistiu. */
   emittedCardId?: string;
   /** sts#8 auto-hook — skip_reason (no_signal, scaffold_in_non_test, triage_rejected, etc). */

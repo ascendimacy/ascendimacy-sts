@@ -61,6 +61,11 @@ export async function runScenario(options: RunOptions): Promise<void> {
       playbookId: motorResult.playbookId,
       durationMs: turnDuration,
       motorTrace: motorResult.motorTrace,
+      // TV2-5 forwarder: copia engineTrace só quando presente — evita
+      // injetar key=undefined no JSON serializado.
+      ...(motorResult.engineTrace !== undefined
+        ? { engineTrace: motorResult.engineTrace }
+        : {}),
       emittedCardId: motorResult.emittedCardId,
       cardEmissionSkipReason: motorResult.cardEmissionSkipReason,
       personaEntry: {

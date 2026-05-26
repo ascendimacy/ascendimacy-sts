@@ -24,6 +24,16 @@ export interface TurnTrace {
   playbookId: string;
   durationMs: number;
   motorTrace?: unknown;
+  /**
+   * TV2-5 (motor spec ops#1136): EngineTraceV2 do motor — full engine
+   * telemetry per turn (LLM calls com prompt/response, pre/post state
+   * snapshots, component traces, SK writes anotados). Pass-through não
+   * tipado — STS não depende de motor's @ascendimacy/shared.
+   *
+   * TODO TV2-5-strict-validate: opt-in Zod parse via parseEngineTraceV2
+   * quando STS ganhar dep no motor shared (ou cópia do schema).
+   */
+  engineTrace?: unknown;
   /** sts#8 — card_id se auto-hook detect_achievement+emit_card disparou. */
   emittedCardId?: string;
   /** sts#8 — razão pra skip do auto-hook (no_signal, scaffold_in_non_test, triage_rejected, auto_hook_error). */

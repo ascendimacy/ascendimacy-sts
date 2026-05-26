@@ -456,6 +456,8 @@ export async function runMotorTurn(
       engagement: "low" | "medium" | "high";
       rationale: string;
     };
+    // TV2-5 (motor spec ops#1136): EngineTraceV2 pass-through não tipado.
+    engineTrace?: unknown;
   }>(drotaResult);
   const lm = drota.linguisticMaterialization;
   if (typeof lm === "string") {
@@ -653,6 +655,10 @@ export async function runMotorTurn(
     budgetRemaining,
     playbookId: deployProfileId,
     motorTrace: { plan, drota, exec, mock: process.env["USE_MOCK_LLM"] === "true" },
+    // TV2-5 forwarder: pass-through do motor's engineTrace pro trace.json.
+    // Omitido quando motor não emite (USE_SIMPLIFIED_PIPELINE off, ou
+    // captureTrace=false). Pass-through unparsed — UI/consumers validam.
+    ...(drota.engineTrace !== undefined ? { engineTrace: drota.engineTrace } : {}),
     emittedCardId,
     cardEmissionSkipReason,
   };

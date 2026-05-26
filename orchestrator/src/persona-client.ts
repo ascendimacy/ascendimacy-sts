@@ -135,6 +135,44 @@ export async function personaReset(personaId: string): Promise<void> {
   );
 }
 
+/**
+ * Subject Knowledge Fase 8: finaliza sessão chamando LLM summarize.
+ * Persiste memória cross-session pra próxima sessão herdar contexto.
+ */
+export async function personaFinalizeSession(
+  personaId: string,
+  finalTrust?: number,
+): Promise<{ ok: boolean; sessions_count?: number; summary_preview?: string }> {
+  if (process.env["USE_MOCK_LLM"] === "true") {
+    return { ok: true, sessions_count: 1 };
+  }
+  const client = await getPersonaClient();
+  const result = await client.callTool(
+    {
+      name: "persona_finalize_session",
+      arguments: { personaId, finalTrust },
+    },
+    undefined,
+    { timeout: PERSONA_MCP_TIMEOUT },
+  );
+  const r = result as { content: Array<{ type: string; text: string }>; isError?: boolean };
+  const text = r.content?.find((c) => c.type === "text")?.text ?? "{}";
+  return JSON.parse(text) as { ok: boolean; sessions_count?: number; summary_preview?: string };
+}
+
+/**
+ * Wipe persona memory completamente (testes).
+ */
+export async function personaClearMemory(personaId: string): Promise<void> {
+  if (process.env["USE_MOCK_LLM"] === "true") return;
+  const client = await getPersonaClient();
+  await client.callTool(
+    { name: "persona_clear_memory", arguments: { personaId } },
+    undefined,
+    { timeout: PERSONA_MCP_TIMEOUT },
+  );
+}
+
 export async function closePersonaClient(): Promise<void> {
   if (_client) {
     await _client.close();

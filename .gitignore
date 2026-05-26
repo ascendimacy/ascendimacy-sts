@@ -23,3 +23,8 @@ logs/
 
 # VSCode workspace files (local dev)
 *.code-workspace
+
+# Persona cross-session memory (PR 0 — spec 2026-05-25)
+.sts/persona-states/
+
+runs/

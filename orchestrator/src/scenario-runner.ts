@@ -22,6 +22,7 @@ import { parseScenario, dayToIso, initDebugRun, isDebugModeEnabled } from "@asce
 import type { Scenario, ScenarioEvent } from "@ascendimacy/sts-shared";
 import { dispatchEvent } from "./scenario-events.js";
 import type { EventOutcome, EventContext } from "./scenario-events.js";
+import { forceResetMotorClients } from "./motor-client.js";
 import {
   generateConsolidatedReport,
   type ConsolidatedReport,
@@ -125,15 +126,16 @@ export async function runScenarioFromFile(opts: ScenarioRunOptions): Promise<Sce
     }
   }
 
-  // sts#11: per-event timeout. Default 180s — 30d scenario com evento travado
-  // não pendura indefinidamente. Override via ASC_EVENT_TIMEOUT_SECONDS.
+  // sts#11: per-event timeout. Default 600s — uma solo_session com 10 turns
+  // pode fazer ~110 chamadas MCP sequenciais; 180s era insuficiente.
+  // Override via ASC_EVENT_TIMEOUT_SECONDS.
   const eventTimeoutMs = (() => {
     const v = process.env["ASC_EVENT_TIMEOUT_SECONDS"];
     if (v) {
       const n = Number.parseInt(v, 10);
       if (!Number.isNaN(n) && n > 0) return n * 1000;
     }
-    return 180_000;
+    return 600_000;
   })();
 
   const outcomes: EventOutcome[] = [];
@@ -172,6 +174,11 @@ export async function runScenarioFromFile(opts: ScenarioRunOptions): Promise<Sce
       ),
     ]);
     outcomes.push(outcome);
+    // BUG-STS-02: após timeout, os subprocessos MCP ficam em estado desconhecido.
+    // Força reset para que o próximo evento obtenha conexões frescas.
+    if (!outcome.success && outcome.error?.startsWith("event_timeout")) {
+      forceResetMotorClients();
+    }
     if (opts.verbose) {
       const status = outcome.success ? "✓" : outcome.error?.startsWith("event_timeout") ? "⏱" : "✗";
       console.log(`  → ${status} ${outcome.duration_ms}ms ${outcome.notes ?? outcome.error ?? ""}`);

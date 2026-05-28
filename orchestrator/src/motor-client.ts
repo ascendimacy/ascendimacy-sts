@@ -664,6 +664,25 @@ export function resetMotorClientsForTest(): void {
   _motorUnavailable = false;
 }
 
+/**
+ * Force-reset após event_timeout — fecha clients em background (fire-and-forget)
+ * e invalida o cache imediatamente para que o próximo evento get fresh connections.
+ * Necessário porque Promise.race abandona o dispatchEvent promise mas os
+ * subprocessos MCP ficam vivos e em estado desconhecido.
+ */
+export function forceResetMotorClients(): void {
+  if (_clients) {
+    const stale = _clients;
+    Promise.all([
+      stale.planejador.close(),
+      stale.motorDrota.close(),
+      stale.motorExecucao.close(),
+    ]).catch(() => {});
+  }
+  _clients = null;
+  _motorUnavailable = false;
+}
+
 export async function closeMotorClients(): Promise<void> {
   if (_clients) {
     await Promise.all([

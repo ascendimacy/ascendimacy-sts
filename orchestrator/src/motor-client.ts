@@ -404,6 +404,11 @@ export async function runMotorTurn(
           extracted_signals: extractedSignals,
           last_user_message: personaMessage,
           recent_turns: recentTurns,
+          // v0.2.6: STS validation usa discovery_only por default — primeira
+          // sessão de validação foca em descobrir interesse via conversa
+          // antes de empurrar conteúdo. Quando STS evoluir pra cobrir
+          // mapping_ready/applied_double_helix, sobrescrever por scenario.
+          journey_stage: "discovery_only",
         },
       },
     },
@@ -480,7 +485,16 @@ export async function runMotorTurn(
         playbookId: deployProfileId,
         selectedContentId,
         output: drota.linguisticMaterialization,
-        metadata: {},
+        // Mirror motor/orchestrator/src/orchestrator.ts:metadata pra
+        // executor (motor-execucao) ter acesso a contextHints — necessário
+        // pra CP7 (tutorial_outcome) e qualquer outro consumer downstream
+        // que lê metadata.contextHints. Antes ficava {} e o motor perdia
+        // contexto pós-materializer no event_log.
+        metadata: {
+          contextHints: plan.contextHints ?? {},
+          userMessage: personaMessage,
+          personaId,
+        },
       },
     },
     undefined,

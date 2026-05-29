@@ -19,6 +19,7 @@ start_date: "2026-05-25T00:00:00Z"
 end_date: "2026-05-29T23:59:59Z"
 
 personas: [ryo-ochiai]
+parents: []
 
 mock_llm: false
 state_dir: ".sts/state/tracer-helix-3sessions-ryo"

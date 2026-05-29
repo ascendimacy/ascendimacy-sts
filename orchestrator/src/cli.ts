@@ -108,7 +108,14 @@ async function handleRunScenario(argv: string[]): Promise<void> {
       forceMockLlm: opts.forceMockLlm,
       clientsFactory,
       runSoloSession: async (personaId, turns, _sessionId) => {
-        await runScenario({ personaId, turns, dryRun: false });
+        const scenario = yaml.load(readFileSync(scenarioPath!, "utf-8"));
+        const parsed = parseScenario(scenario);
+        await runScenario({
+          personaId,
+          turns,
+          dryRun: false,
+          ...(parsed.valid ? { scenario: parsed.scenario } : {}),
+        });
       },
       runJointSession: async (personaA, personaB, turns, sessionId) => {
         // v1 simplificação: roda solo de cada persona sequencialmente.
@@ -116,8 +123,22 @@ async function handleRunScenario(argv: string[]): Promise<void> {
         if (opts.verbose) {
           console.log(`  [joint v1] running solo for ${personaA} then ${personaB} (sessionId=${sessionId})`);
         }
-        await runScenario({ personaId: personaA, turns: Math.ceil(turns / 2), dryRun: false });
-        await runScenario({ personaId: personaB, turns: Math.floor(turns / 2), dryRun: false });
+        const scenario = yaml.load(readFileSync(scenarioPath!, "utf-8"));
+        const parsed = parseScenario(scenario);
+        await runScenario({
+          personaId: personaA,
+          turns: Math.ceil(turns / 2),
+          dryRun: false,
+          ...(parsed.valid ? { scenario: parsed.scenario } : {}),
+          scenarioEventLabel: sessionId,
+        });
+        await runScenario({
+          personaId: personaB,
+          turns: Math.floor(turns / 2),
+          dryRun: false,
+          ...(parsed.valid ? { scenario: parsed.scenario } : {}),
+          scenarioEventLabel: sessionId,
+        });
       },
     });
   } finally {

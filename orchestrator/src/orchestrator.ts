@@ -3,7 +3,7 @@ import { createSessionTrace, finalizeTrace, addTurn } from "@ascendimacy/sts-sha
 import { runMotorTurn, closeMotorClients } from "./motor-client.js";
 import { personaNextMessage, personaReset, personaFinalizeSession, closePersonaClient } from "./persona-client.js";
 import { writeTrace } from "./trace-writer.js";
-import { evaluateRubric } from "./rubric.js";
+import { evaluateRubric, evaluateRubricV2 } from "./rubric.js";
 import { writeReport } from "./report.js";
 import type { RunOptions } from "./types.js";
 import type { STSTurnTrace } from "@ascendimacy/sts-shared";
@@ -12,7 +12,14 @@ const DEFAULT_INITIAL_MESSAGE =
   "Olá! Seja bem-vindo. Estou aqui para conversar e ajudar. O que está na sua mente hoje?";
 
 export async function runScenario(options: RunOptions): Promise<void> {
-  const { personaId, turns, initialBotMessage = DEFAULT_INITIAL_MESSAGE, dryRun = false } = options;
+  const {
+    personaId,
+    turns,
+    initialBotMessage = DEFAULT_INITIAL_MESSAGE,
+    dryRun = false,
+    scenario,
+    scenarioEventLabel,
+  } = options;
 
   if (dryRun) {
     console.log(`[dry-run] Would run scenario:`);
@@ -89,7 +96,8 @@ export async function runScenario(options: RunOptions): Promise<void> {
 
   const tracePath = writeTrace(finalized);
   const rubric = evaluateRubric(finalized, turns);
-  const reportPath = writeReport(finalized, rubric, totalDuration);
+  const rubricV2 = evaluateRubricV2(finalized, scenario?.rubric_v2);
+  const reportPath = writeReport(finalized, rubric, rubricV2, totalDuration);
 
   console.log(`\n[STS] Completed in ${(totalDuration / 1000).toFixed(1)}s`);
   console.log(`[STS] Trace: ${tracePath}`);
@@ -97,6 +105,16 @@ export async function runScenario(options: RunOptions): Promise<void> {
   console.log(`[STS] Rubric: ${rubric.summary}`);
   for (const gate of rubric.gates) {
     console.log(`  ${gate.passed ? "✅" : gate.gate === "G5" ? "⚠️" : "❌"} ${gate.gate}: ${gate.detail}`);
+  }
+  if (scenarioEventLabel) {
+    console.log(`[STS] Scenario label: ${scenarioEventLabel}`);
+  }
+  if (rubricV2.enabled) {
+    console.log(`[STS] Rubric V2: ${rubricV2.summary}`);
+    for (const item of rubricV2.subitems) {
+      const icon = item.status === "PASS" ? "✅" : item.status === "FAIL" ? "❌" : item.status === "NOT_TRIGGERED" ? "⏭️" : "⚠️";
+      console.log(`  ${icon} ${item.id}: ${item.detail}`);
+    }
   }
 
   // Subject Knowledge Fase 8: finaliza sessão (LLM summarize + persist cross-session memory).
@@ -117,7 +135,7 @@ export async function runScenario(options: RunOptions): Promise<void> {
   await closePersonaClient();
   await closeMotorClients();
 
-  if (!rubric.allMustPassGreen) {
+  if (!rubric.allMustPassGreen || rubricV2.blockerFailures > 0) {
     process.exit(1);
   }
 }

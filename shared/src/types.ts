@@ -24,6 +24,17 @@ export interface TurnTrace {
   playbookId: string;
   durationMs: number;
   motorTrace?: unknown;
+  engineTrace?: {
+    tutorial_contract?: { move_type?: string };
+    tutorial_outcome?: { status?: string; needs_revisit?: boolean };
+    session_mission?: Record<string, unknown>;
+    progress_marker?: Record<string, unknown>;
+    session_closure?: Record<string, unknown>;
+  };
+  tutorialOutcome?: { status?: string; needs_revisit?: boolean };
+  sessionMission?: Record<string, unknown>;
+  progressMarker?: Record<string, unknown>;
+  sessionClosure?: Record<string, unknown>;
   /** sts#8 — card_id se auto-hook detect_achievement+emit_card disparou. */
   emittedCardId?: string;
   /** sts#8 — razão pra skip do auto-hook (no_signal, scaffold_in_non_test, triage_rejected, auto_hook_error). */

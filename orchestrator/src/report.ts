@@ -2,7 +2,7 @@ import { writeFileSync, mkdirSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import type { SessionTrace } from "@ascendimacy/sts-shared";
-import type { RubricResult } from "./rubric.js";
+import type { RubricResult, RubricV2Result } from "./rubric.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(__dirname, "../..");
@@ -10,6 +10,7 @@ const repoRoot = join(__dirname, "../..");
 export function generateReport(
   trace: SessionTrace,
   rubric: RubricResult,
+  rubricV2: RubricV2Result,
   durationMs: number
 ): string {
   const lines: string[] = [];
@@ -34,6 +35,21 @@ export function generateReport(
     lines.push(`- ${icon} **${gate.gate}**: ${gate.detail}`);
   }
   lines.push(``);
+
+  if (rubricV2.enabled) {
+    lines.push(`## Rubric V2 Subitems`);
+    lines.push(``);
+    lines.push(`- Summary: **${rubricV2.summary}**`);
+    lines.push(`- Blocker failures: ${rubricV2.blockerFailures}`);
+    lines.push(`- Advisory failures: ${rubricV2.advisoryFailures}`);
+    lines.push(``);
+    lines.push(`| ID | Severity | Status | Detail |`);
+    lines.push(`|---|---|---|---|`);
+    for (const item of rubricV2.subitems) {
+      lines.push(`| ${item.id} | ${item.severity} | ${item.status} | ${item.detail.replace(/\|/g, "\\|")} |`);
+    }
+    lines.push(``);
+  }
 
   lines.push(`## Dialogue`);
   lines.push(``);
@@ -61,9 +77,10 @@ export function generateReport(
 export function writeReport(
   trace: SessionTrace,
   rubric: RubricResult,
+  rubricV2: RubricV2Result,
   durationMs: number
 ): string {
-  const content = generateReport(trace, rubric, durationMs);
+  const content = generateReport(trace, rubric, rubricV2, durationMs);
   const ts = new Date().toISOString().replace(/[:.]/g, "-");
   const dir = join(repoRoot, "reports");
   mkdirSync(dir, { recursive: true });

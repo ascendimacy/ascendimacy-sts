@@ -1,8 +1,12 @@
+import type { Scenario } from "@ascendimacy/sts-shared";
+
 export interface RunOptions {
   personaId: string;
   turns: number;
   initialBotMessage?: string;
   dryRun?: boolean;
+  scenario?: Scenario;
+  scenarioEventLabel?: string;
 }
 
 export interface MotorTurnResult {

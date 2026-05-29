@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { parseScenario, dayToIso, SCENARIO_EVENT_TYPES } from "../src/scenario.js";
+import {
+  parseScenario,
+  dayToIso,
+  SCENARIO_EVENT_TYPES,
+} from "../src/scenario.js";
 
 const validYaml = {
   name: "test-scenario",
@@ -29,6 +33,34 @@ describe("parseScenario — valid", () => {
   it("mock_llm respects explicit false", () => {
     const r = parseScenario({ ...validYaml, mock_llm: false });
     expect(r.scenario?.mock_llm).toBe(false);
+  });
+
+  it("parses rubric_v2 with one subitem", () => {
+    const r = parseScenario({
+      ...validYaml,
+      rubric_v2: {
+        enabled: true,
+        evaluator_mode: "external",
+        subject_mode: "blind",
+        parent_mode: "optional",
+        subitems: [
+          {
+            id: "tc-001",
+            title: "tutorial contract visible in trace",
+            role: "external_evaluator",
+            visibility: "hidden_from_subject",
+            severity: "blocker",
+            trigger: { type: "outcome", when: "turn_with_tutorial_contract" },
+            window: { start: "same_turn", end: "same_turn" },
+            evidence: ["transcript", "engine_trace", "context_hints"],
+            pass_if: ["tutorial.move_type exists"],
+          },
+        ],
+      },
+    });
+    expect(r.valid).toBe(true);
+    expect(r.scenario?.rubric_v2?.enabled).toBe(true);
+    expect(r.scenario?.rubric_v2?.subitems).toHaveLength(1);
   });
 });
 
@@ -89,6 +121,32 @@ describe("parseScenario — errors", () => {
     expect(parseScenario(null).valid).toBe(false);
     expect(parseScenario("string").valid).toBe(false);
     expect(parseScenario([]).valid).toBe(false);
+  });
+
+  it("fails on invalid rubric_v2 subitem", () => {
+    const r = parseScenario({
+      ...validYaml,
+      rubric_v2: {
+        enabled: true,
+        evaluator_mode: "external",
+        subject_mode: "blind",
+        subitems: [
+          {
+            id: "",
+            title: "",
+            role: "subject",
+            visibility: "public",
+            severity: "hard",
+            trigger: { type: "outcome", when: "unknown" },
+            window: { start: "later", end: "later" },
+            evidence: [],
+            pass_if: [],
+          },
+        ],
+      },
+    });
+    expect(r.valid).toBe(false);
+    expect(r.errors.some((e) => e.includes("rubric_v2.subitems[0].role"))).toBe(true);
   });
 });
 

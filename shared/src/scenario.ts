@@ -28,6 +28,82 @@ export interface ScenarioEvent {
   label?: string;
 }
 
+export const SUBITEM_ROLES = [
+  "external_evaluator",
+  "parent_monitor",
+] as const;
+export type SubitemRole = (typeof SUBITEM_ROLES)[number];
+
+export const SUBITEM_VISIBILITIES = [
+  "hidden_from_subject",
+  "visible_to_parent_only",
+  "visible_to_evaluator_only",
+] as const;
+export type SubitemVisibility = (typeof SUBITEM_VISIBILITIES)[number];
+
+export const SUBITEM_SEVERITIES = ["blocker", "advisory"] as const;
+export type SubitemSeverity = (typeof SUBITEM_SEVERITIES)[number];
+
+export const SUBITEM_TRIGGER_TYPES = ["outcome"] as const;
+export type SubitemTriggerType = (typeof SUBITEM_TRIGGER_TYPES)[number];
+
+export const SUBITEM_TRIGGER_WHENS = [
+  "subject_answer_partial_or_wrong",
+  "subject_answer_correct",
+  "turn_with_tutorial_contract",
+  "session_end",
+  "deflection_detected",
+] as const;
+export type SubitemTriggerWhen = (typeof SUBITEM_TRIGGER_WHENS)[number];
+
+export const SUBITEM_WINDOW_POSITIONS = [
+  "same_turn",
+  "next_turn",
+  "next_two_turns",
+  "session_end",
+] as const;
+export type SubitemWindowPosition = (typeof SUBITEM_WINDOW_POSITIONS)[number];
+
+export const SUBITEM_EVIDENCE_TYPES = [
+  "transcript",
+  "engine_trace",
+  "context_hints",
+  "event_log",
+  "session_summary",
+] as const;
+export type SubitemEvidenceType = (typeof SUBITEM_EVIDENCE_TYPES)[number];
+
+export interface ScenarioSubitem {
+  id: string;
+  title: string;
+  role: SubitemRole;
+  visibility: SubitemVisibility;
+  severity: SubitemSeverity;
+  applies_to?: {
+    personas?: string[];
+    labels?: string[];
+  };
+  trigger: {
+    type: SubitemTriggerType;
+    when: SubitemTriggerWhen;
+  };
+  window: {
+    start: SubitemWindowPosition;
+    end: SubitemWindowPosition;
+  };
+  evidence: SubitemEvidenceType[];
+  pass_if: string[];
+  fail_if?: string[];
+}
+
+export interface ScenarioRubricV2 {
+  enabled: boolean;
+  evaluator_mode: "external";
+  subject_mode: "blind";
+  parent_mode?: "optional";
+  subitems: ScenarioSubitem[];
+}
+
 export interface Scenario {
   name: string;
   start_date: string;
@@ -36,6 +112,7 @@ export interface Scenario {
   parents: string[];
   mock_llm?: boolean;
   state_dir?: string;
+  rubric_v2?: ScenarioRubricV2;
   events: ScenarioEvent[];
 }
 
@@ -121,6 +198,130 @@ export function parseScenario(raw: unknown): ScenarioValidationResult {
 
   if (errors.length > 0) return { valid: false, errors };
 
+  let rubricV2: ScenarioRubricV2 | undefined;
+  const rubricRaw = s["rubric_v2"];
+  if (rubricRaw !== undefined) {
+    if (!rubricRaw || typeof rubricRaw !== "object") {
+      errors.push("'rubric_v2' must be an object when present");
+    } else {
+      const r = rubricRaw as Record<string, unknown>;
+      const enabled = r["enabled"] === true;
+      const evaluator_mode = r["evaluator_mode"];
+      const subject_mode = r["subject_mode"];
+      const parent_mode = r["parent_mode"];
+      const subitemsRaw = r["subitems"];
+
+      if (enabled && evaluator_mode !== "external") {
+        errors.push("'rubric_v2.evaluator_mode' must be 'external'");
+      }
+      if (enabled && subject_mode !== "blind") {
+        errors.push("'rubric_v2.subject_mode' must be 'blind'");
+      }
+      if (
+        parent_mode !== undefined &&
+        parent_mode !== "optional"
+      ) {
+        errors.push("'rubric_v2.parent_mode' must be 'optional' when present");
+      }
+      if (!Array.isArray(subitemsRaw)) {
+        errors.push("'rubric_v2.subitems' must be an array");
+      } else {
+        const subitems: ScenarioSubitem[] = [];
+        for (let i = 0; i < subitemsRaw.length; i++) {
+          const item = subitemsRaw[i] as Record<string, unknown>;
+          if (!item || typeof item !== "object") {
+            errors.push(`rubric_v2.subitems[${i}] must be an object`);
+            continue;
+          }
+
+          const id = item["id"];
+          const title = item["title"];
+          const role = item["role"];
+          const visibility = item["visibility"];
+          const severity = item["severity"];
+          const trigger = item["trigger"] as Record<string, unknown> | undefined;
+          const window = item["window"] as Record<string, unknown> | undefined;
+          const evidence = item["evidence"];
+          const pass_if = item["pass_if"];
+          const fail_if = item["fail_if"];
+          const appliesTo = item["applies_to"] as Record<string, unknown> | undefined;
+
+          if (typeof id !== "string" || id.length === 0) {
+            errors.push(`rubric_v2.subitems[${i}].id must be non-empty string`);
+          }
+          if (typeof title !== "string" || title.length === 0) {
+            errors.push(`rubric_v2.subitems[${i}].title must be non-empty string`);
+          }
+          if (!SUBITEM_ROLES.includes(role as SubitemRole)) {
+            errors.push(`rubric_v2.subitems[${i}].role invalid`);
+          }
+          if (!SUBITEM_VISIBILITIES.includes(visibility as SubitemVisibility)) {
+            errors.push(`rubric_v2.subitems[${i}].visibility invalid`);
+          }
+          if (!SUBITEM_SEVERITIES.includes(severity as SubitemSeverity)) {
+            errors.push(`rubric_v2.subitems[${i}].severity invalid`);
+          }
+          if (!trigger || trigger["type"] !== "outcome" || !SUBITEM_TRIGGER_WHENS.includes(trigger["when"] as SubitemTriggerWhen)) {
+            errors.push(`rubric_v2.subitems[${i}].trigger invalid`);
+          }
+          if (
+            !window ||
+            !SUBITEM_WINDOW_POSITIONS.includes(window["start"] as SubitemWindowPosition) ||
+            !SUBITEM_WINDOW_POSITIONS.includes(window["end"] as SubitemWindowPosition)
+          ) {
+            errors.push(`rubric_v2.subitems[${i}].window invalid`);
+          }
+          if (!Array.isArray(evidence) || evidence.length === 0 || evidence.some((e) => !SUBITEM_EVIDENCE_TYPES.includes(e as SubitemEvidenceType))) {
+            errors.push(`rubric_v2.subitems[${i}].evidence invalid`);
+          }
+          if (!Array.isArray(pass_if) || pass_if.length === 0 || pass_if.some((x) => typeof x !== "string")) {
+            errors.push(`rubric_v2.subitems[${i}].pass_if must be non-empty string array`);
+          }
+          if (fail_if !== undefined && (!Array.isArray(fail_if) || fail_if.some((x) => typeof x !== "string"))) {
+            errors.push(`rubric_v2.subitems[${i}].fail_if must be string array when present`);
+          }
+
+          const applies_to = appliesTo
+            ? {
+                personas: Array.isArray(appliesTo["personas"]) ? (appliesTo["personas"] as string[]) : undefined,
+                labels: Array.isArray(appliesTo["labels"]) ? (appliesTo["labels"] as string[]) : undefined,
+              }
+            : undefined;
+
+          subitems.push({
+            id: String(id ?? ""),
+            title: String(title ?? ""),
+            role: role as SubitemRole,
+            visibility: visibility as SubitemVisibility,
+            severity: severity as SubitemSeverity,
+            ...(applies_to ? { applies_to } : {}),
+            trigger: {
+              type: "outcome",
+              when: (trigger?.["when"] ?? "turn_with_tutorial_contract") as SubitemTriggerWhen,
+            },
+            window: {
+              start: (window?.["start"] ?? "same_turn") as SubitemWindowPosition,
+              end: (window?.["end"] ?? "same_turn") as SubitemWindowPosition,
+            },
+            evidence: evidence as SubitemEvidenceType[],
+            pass_if: pass_if as string[],
+            ...(Array.isArray(fail_if) ? { fail_if: fail_if as string[] } : {}),
+          });
+        }
+
+        rubricV2 = {
+          enabled,
+          evaluator_mode: "external",
+          subject_mode: "blind",
+          ...(parent_mode === "optional" ? { parent_mode: "optional" as const } : {}),
+          subitems,
+        };
+      }
+    }
+  }
+
+  if (errors.length > 0) return { valid: false, errors };
+
   const scenario: Scenario = {
     name: s["name"] as string,
     start_date: s["start_date"] as string,
@@ -129,6 +330,7 @@ export function parseScenario(raw: unknown): ScenarioValidationResult {
     parents: s["parents"] as string[],
     mock_llm: s["mock_llm"] !== false,
     state_dir: typeof s["state_dir"] === "string" ? (s["state_dir"] as string) : undefined,
+    ...(rubricV2 ? { rubric_v2: rubricV2 } : {}),
     events,
   };
   return { valid: true, errors: [], scenario };

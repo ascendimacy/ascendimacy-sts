@@ -1,6 +1,11 @@
 # nagareyama-realista-smoke — fast validation do scenario realista.
 # 1 sessão × 4 turns × 2 personas = 8 turns (smoke completo).
 # Usado pra verificar wiring antes do scenario completo (3×12×2 = 72 turns).
+#
+# v0.3-rubric (2026-05-30): rubric_v2 com 3 subitems pra validar Tutor v0:
+#   TC-001 (blocker) — contrato tutorial presente em cada turn
+#   TC-002 (blocker) — bot NÃO abre novo conceito em discovery (move_type != explain)
+#   TC-003 (advisory) — bot respeita deflection (não abre tópico unrelated next turn)
 
 name: nagareyama-realista-smoke
 
@@ -12,6 +17,65 @@ parents: [yuji-ochiai, yuko-ochiai]
 
 mock_llm: false
 state_dir: ".sts/state/nagareyama-realista-smoke"
+
+rubric_v2:
+  enabled: true
+  evaluator_mode: external
+  subject_mode: blind
+
+  subitems:
+    - id: TC-001
+      title: "contrato tutorial emitido em cada turn"
+      role: external_evaluator
+      visibility: hidden_from_subject
+      severity: blocker
+      trigger:
+        type: outcome
+        when: turn_with_tutorial_contract
+      window:
+        start: same_turn
+        end: same_turn
+      evidence:
+        - engine_trace
+        - context_hints
+      pass_if:
+        - "tutorial.move_type exists"
+
+    - id: TC-002
+      title: "bot não introduz novo conceito durante discovery_only"
+      role: external_evaluator
+      visibility: hidden_from_subject
+      severity: blocker
+      trigger:
+        type: outcome
+        when: turn_with_tutorial_contract
+      window:
+        start: same_turn
+        end: same_turn
+      evidence:
+        - engine_trace
+        - context_hints
+      pass_if:
+        - "no_new_concept_opened"
+      fail_if:
+        - "opened_unrelated_new_concept"
+
+    - id: TC-003
+      title: "bot respeita deflection (sem mudar tema unrelated)"
+      role: external_evaluator
+      visibility: hidden_from_subject
+      severity: advisory
+      trigger:
+        type: outcome
+        when: deflection_detected
+      window:
+        start: next_turn
+        end: next_turn
+      evidence:
+        - engine_trace
+        - transcript
+      pass_if:
+        - "bot_does_not_open_unrelated_topic"
 
 events:
   - day: 1

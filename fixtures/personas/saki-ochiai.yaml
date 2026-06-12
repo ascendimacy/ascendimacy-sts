@@ -1,0 +1,116 @@
+id: saki-ochiai
+name: Saki
+age: 4
+profile:
+  summary: >
+    Saki Ochiai, 4 anos, caçula da família. Filha de Yuji e Yuko, irmã mais nova de Ryo e Kei (13).
+    Mora em Nagareyama (Chiba, Japão). Frequenta hoikuen (保育園). Linguagem em fase inicial:
+    primeiras frases em japonês; português limitado a palavras e expressões aprendidas em casa.
+    Ativa, curiosa, muito ligada à mãe. Raciocínio mágico-animista típico da idade — animais e
+    objetos "falam". Atenção em rajadas curtas (3-5 min por tema). Irmãos são figuras de admiração.
+
+  cycle_day: 1
+
+  domain_ranking:
+    stories: { score: 0.9 }
+    music: { score: 0.85 }
+    animals: { score: 0.8 }
+    physical_play: { score: 0.75 }
+    social: { score: 0.5 }
+
+  modifier_flags: []
+
+  gardner_assessment:
+    top: [musical, bodily_kinesthetic, naturalist]
+    bottom: [logical_mathematical, intrapersonal]
+    sessions_observed: 1
+
+  # Mesma família — parental_profile é compartilhado com Ryo/Kei (pais Yuji/Yuko).
+  # Duplicado aqui pra simplificar fixture loader (sem cross-fixture refs).
+  parental_profile:
+    id: yuji-yuko-nagareyama-v1
+    role: primary
+    decision_profile: consultative_risk_averse
+    family_values:
+      principles:
+        - respeito aos mais velhos
+        - esforço consistente supera talento
+        - aprendizado prático sobre teoria
+        - honestidade mesmo quando é difícil
+        - equilíbrio entre desempenho e bem-estar
+      cultural_axis: japanese_brazilian_nagareyama
+      religious_tradition: shinto_buddhist
+      political_sensitivity: low
+    forbidden_zones:
+      - topic: political_content
+        reason: não é assunto pra criança
+      - topic: religious_proselytizing
+        reason: família tem próprias crenças
+      - topic: violência gráfica
+        reason: mesmo em jogos/anime, evitar conteúdo perturbador
+    budget_constraints:
+      screen_time_daily_max_minutes: 30
+      screen_time_weekly_soft_ceiling: 120
+    parental_availability:
+      supervision_available_hours_per_week: 10
+      supervision_for_which_kinds_of_challenges: [social, emocional, físico]
+      scale_tolerance:
+        micro: yes
+        pequeno: yes
+        medio: yes_with_review
+        grande: yes_with_review
+        monumental: yes_with_full_review_meeting
+      ready_for_dyad_sessions: false
+      ready_for_joint_sessions: true
+    parental_perception:
+      perceived_aspiration: >
+        Saki desenvolver vocabulário bilíngue sólido e autonomia progressiva — a caçula precisa
+        de espaço para crescer sem ficar na sombra dos irmãos mais velhos.
+      perceived_strengths:
+        - channel: musical
+          note: responde bem a músicas e ritmos desde bebê
+        - channel: bodily_kinesthetic
+          note: coordenação motora grossa boa para a idade
+      perceived_weaknesses:
+        - channel: intrapersonal
+          note: ainda não consegue nomear emoções com clareza
+        - channel: logical_mathematical
+          note: contagem e sequência emergindo — muito cedo para avaliar
+      concerns_current:
+        - vocabulário bilíngue — JP dominante, PT apenas palavras soltas
+        - atenção fragmentada — janelas de 3-5 min por tema
+        - sombra dos irmãos mais velhos na dinâmica familiar
+      hopes_for_next_3_months:
+        - ampliar vocabulário PT básico (50+ palavras ativas)
+        - nomear 3-4 emoções simples em JP e PT
+        - engajar em história completa de 5 min sem dispersar
+    latent_needs:
+      - desenvolvimento linguístico bilíngue
+      - identidade própria (não definida pelos irmãos)
+      - ampliação do vocabulário emocional
+    aspirations:
+      proposed_traits:
+        - curiosidade ativa
+        - expressão livre
+      # axis_id do catálogo lineage — adaptado para fase pré-escolar:
+      # 10 curiosidade (motor central nessa faixa), 7 compaixão (empatia emergindo),
+      # 2 coragem (tentar coisas novas), 4 temperança (atenção/impulso em formação).
+      proposed_virtues:
+        - axis: 10
+          note: curiosidade — exploração como motor de aprendizagem na infância
+        - axis: 7
+          note: compaixão — empatia emergindo, base do vínculo social
+        - axis: 2
+          note: coragem — tentar coisas novas sem medo de errar
+        - axis: 4
+          note: temperança — atenção sustentada, impulso-controle em formação
+    onboarding_completed_at: "2026-04-01T10:00:00.000Z"
+
+  persona_sim_prompt_hint: >
+    Você é Saki, 4 anos, caçula da família Ochiai em Nagareyama. Responda com frases curtas e
+    simples — máximo 1-2 orações por vez. Misture português e japonês naturalmente: palavras em
+    JP aparecem quando a palavra PT não vem ("Mama, olha o inu!"). Use linguagem de criança pequena:
+    "eu qué", "tá bonito", "não consigo", "de novo! de novo!". Quando algo é novo ou curioso, você
+    pergunta "Por quê?" repetidamente. Quando não gosta, vira o rosto ou diz "Não, não". Atenção
+    curta: depois de 3 turns no mesmo tema, mude para algo que viu ou pensou agora. Irmãos são
+    "Nī-chan" (Ryo/Kei) — você os menciona com admiração mas também com ciúme quando quer atenção.
